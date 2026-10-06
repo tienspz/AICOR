@@ -8,14 +8,18 @@
   - Phase 3: Layer 1 Collectors (`src/collection/`) for SEC EDGAR 10-Q, Google Trends, Yahoo Finance, product launches, funding, relationships, and append-only CSV writer (`storage.py`).
   - Phase 4: Baseline historical seeds (2022-Q1 to 2026-Q2) generated in `data/seeds/` and bootstrapped into `data/raw/*.csv` (159 records).
   - Phase 5: Layer 2 Cleaner & Validator (`src/cleaning/cleaner.py`), 159 valid records cleaned and exported to `data/cleaned/*.csv`.
-  - Phase 6: Layer 2 Computation Engine (`src/computation/`), within-company z-score normalization, rolling 4Q moving averages, $E = Out - In$, 3-weight sensitivity analysis, exported to `data/processed/fact_quarterly.csv`, `sensitivity_analysis.csv`, and `manifest.json` (54 quarterly facts).
-  - Phase 7: Unified CLI runner (`run_pipeline.py`) and GitHub Actions workflows (`fast_rhythm.yml`, `slow_rhythm.yml`).
-  - Test suite: 20/20 pytest unit tests passing.
-- In progress: Local Git repository initialized on branch `main` (commit `8ac2402`). Ready for user to create GitHub remote and push.
-- Pending: Push to GitHub remote and enable GitHub Actions Write permissions.
-- Known issues: Remote origin not yet linked (waiting for user repository URL).
-- Last verified checks: Git repo initialized, `.gitignore` created; 20/20 pytest tests passing; initial commit `8ac2402` contains 77 files.
-- Architecture status: Layer 1 (Collection) and Layer 2 (Computation) are fully implemented, verified, committed, and ready for cloud auto-sync.
+- Phase: Phase 5 — Data Pipeline Deployed to GitHub (https://github.com/tienspz/AICOR)
+- Milestone: Repository pushed to GitHub remote `origin/main`. Automated workflows installed.
+- Completed:
+  - Linked remote `origin` to `https://github.com/tienspz/AICOR.git`.
+  - Merged remote initial commit and pushed full codebase to branch `main`.
+  - All 77 project files, data directories (`data/raw/`, `data/cleaned/`, `data/processed/`, `data/seeds/`), workflows, and tests are live on GitHub.
+- In progress: User configuration of GitHub Actions Write permissions on repo settings.
+- Pending: Verify first automated cloud run via GitHub Actions.
+- Known issues: None.
+- Last verified checks: `git push -u origin main` succeeded; 20/20 pytest tests passing locally.
+- Architecture status: Layer 1 (Collection) and Layer 2 (Computation) are fully implemented, verified, and live on GitHub Cloud.
+
 
 
 
