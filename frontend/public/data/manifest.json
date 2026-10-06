@@ -1,0 +1,41 @@
+{
+  "system": "AICOR",
+  "version": "5.1",
+  "last_sync_utc": "2026-10-06T14:28:03Z",
+  "status": "success",
+  "quarters_count": 18,
+  "quarter_range": {
+    "start": "2022-Q1",
+    "end": "2026-Q2"
+  },
+  "companies": [
+    {
+      "id": 1,
+      "name": "Microsoft",
+      "ticker": "MSFT"
+    },
+    {
+      "id": 2,
+      "name": "OpenAI",
+      "ticker": ""
+    },
+    {
+      "id": 3,
+      "name": "Anthropic",
+      "ticker": ""
+    }
+  ],
+  "default_weights": {
+    "product": 0.6,
+    "trends": 0.4
+  },
+  "artifacts": {
+    "fact_quarterly_csv": "data/processed/fact_quarterly.csv",
+    "sensitivity_analysis_csv": "data/processed/sensitivity_analysis.csv",
+    "sync_log_csv": "data/processed/sync_log.csv",
+    "sqlite_db": "data/processed/aicor.db",
+    "chart_series_json": "data/processed/chart_series.json",
+    "timeline_events_json": "data/processed/timeline_events.json",
+    "portfolio_baseline_json": "data/processed/portfolio_baseline.json"
+  }
+}

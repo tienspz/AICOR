@@ -1,7 +1,7 @@
 # Project state
 
-- Phase: Phase 6 — Backend Extensions Complete (BE-01 through BE-05)
-- Milestone: SQLite store, pre-computed JSON bundles, RSS/blog scraper, EDGAR 10-Q monitor, and FastAPI service built, pipeline-integrated, and tested. 35/35 pytest passing.
+- Phase: Phase 7 — Full Stack Complete (Layers 1 + 2 + 3)
+- Milestone: React display app built on precomputed bundles; entire AICOR system (collection → computation → API → dashboard) implemented and verified. Backend 35/35 pytest; frontend tsc + vite build clean.
 - Completed:
   - Phase 1: CSV schemas and data models (`src/common/schemas.py`, `src/common/config.py`).
   - Phase 2: Anti-ban & resilience engine (`src/common/resilience.py`, token bucket rate limiter, retry with backoff).
@@ -18,7 +18,7 @@
 - Pending: Verify first automated cloud run via GitHub Actions.
 - Known issues: None.
 - Last verified checks: `python run_pipeline.py --mode compute` regenerates `aicor.db` (54 fact rows) + 3 JSON bundles; `pytest` 35/35 passing (2026-10-06).
-- Architecture status: Layer 1 (Collection, incl. blog scrapers + EDGAR monitor) and Layer 2 (Computation, incl. SQLite sync + JSON export) complete; API service (FastAPI) serves precomputed outputs per FR-14. Remaining: Layer 3 React Display (AICOR-020).
+- Architecture status: Layer 1 (Collection, incl. blog scrapers + EDGAR monitor) and Layer 2 (Computation, incl. SQLite sync + JSON export) complete; API service (FastAPI) serves precomputed outputs per FR-14. Layer 3 React Display (AICOR-020) complete: `frontend/` consumes static JSON bundles + manifest, dual-mode live stock, `tsc -b` + `vite build` clean, preview smoke test 200.
 
 
 

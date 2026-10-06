@@ -3,6 +3,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
 # Pytest cache
 .pytest_cache/
 

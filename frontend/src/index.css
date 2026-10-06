@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+body {
+  background-color: var(--color-slate-950);
+  color: var(--color-slate-100);
+}
+
+/* Portfolio sliders: full-width, high-contrast thumb */
+input[type="range"].aicor-slider {
+  width: 100%;
+  accent-color: var(--color-indigo-500);
+  cursor: pointer;
+}
+
+/* Slim dark scrollbars for the timeline panel */
+.aicor-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.aicor-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.aicor-scroll::-webkit-scrollbar-thumb {
+  background: var(--color-slate-700);
+  border-radius: 9999px;
+}

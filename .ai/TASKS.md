@@ -6,7 +6,7 @@ None.
 
 ## READY
 
-- AICOR-020 — Build Layer 3 Display (React Web App) consuming `data/processed/` precomputed assets and `manifest.json`. Priority: P1. Acceptance: Interactive 3-company quarterly E-score chart, In/Out breakdown, event timeline overlay, illustrative portfolio allocation tool (FR-09, FR-10), without recalculating E in React.
+None.
 
 ## BLOCKED
 
@@ -31,6 +31,7 @@ None.
 - AICOR-018 — Task BE-02: Automated RSS/Blog Scraper (`src/collection/scrapers/blog_scraper.py`, `tests/test_scrapers.py`). Priority: P1. Acceptance: Official OpenAI/Anthropic/MSFT feeds; A/B/C auto-tag per Appendix A; append-only via storage; resilience rate-limit. Verify: 3 mock-feed tests passing.
 - AICOR-019 — Task BE-03: SEC EDGAR 10-Q Filing Monitor & Alert (`src/collection/edgar_monitor.py`, `.github/workflows/edgar_sync.yml`). Priority: P1. Acceptance: SEC Atom poll for CIK 0000789019, `check_new_filings()` offline-safe, auto-sync + weekly workflow. Verify: 3 mock tests passing; live `check_new_filings()` ran without error (False).
 - AICOR-021 — Task BE-05: FastAPI REST Service & Live Stock Widget (`src/api/main.py`, `src/api/routes.py`, `tests/test_api.py`). Priority: P2. Acceptance: `/api/health|facts|events|sensitivity|stock/msft/live` (15m latency tag), `/api/simulate-portfolio` (sum=1.0±0.001), CORS `*`. Verify: 5 TestClient tests passing.
+- AICOR-020 — Build Layer 3 Display (React Web App) (`frontend/`: Vite + React 19 + TS + Tailwind v4 + Recharts + lucide-react). Priority: P1. Acceptance: E-score chart (3 companies, E=0 reference, event tooltip), In/Out breakdown, raw-metrics tab, 33-event timeline with filters, portfolio simulator (3 sliders locked to 100%, median-E scoring, mandatory disclaimer), methodology modal, manifest footer; FR-14 (no E recalculation), FR-12 latency label. Verify: `tsc -b` clean, `vite build` success (11.3s), preview smoke test 200 on index + JSONs.
 
 
 

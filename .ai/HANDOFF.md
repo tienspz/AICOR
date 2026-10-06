@@ -1,17 +1,14 @@
 # Handoff
 
 - Last updated: 2026-10-06
-- Objective: All 5 backend extension tasks (BE-01 through BE-05) implemented, verified, and pushed.
+- Objective: Full stack complete — Layer 1 (Collection), Layer 2 (Computation + API), Layer 3 (React Display) all implemented, verified, and pushed.
 - Branch: `main` tracking `origin/main`.
-- Current phase: Phase 6 — Backend Extensions Complete (SQLite + JSON + Scrapers + EDGAR monitor + FastAPI).
+- Current phase: Phase 7 — Layer 3 React Display Complete (AICOR-020 DONE).
 - Completed:
-  - BE-01 (P0): `src/computation/db.py` — 6-table SQLite engine per SRS 3.4; `sync_csv_to_sqlite()` integrated at end of `run_computation_pipeline()`; `data/processed/aicor.db` live with 54 fact_quarterly rows.
-  - BE-04 (P0): `src/computation/exporter.py` — `chart_series.json`, `timeline_events.json` (33 events, date-sorted), `portfolio_baseline.json` (median E 4Q + Vietnamese disclaimer, NaN→null); pipeline-integrated.
-  - BE-02 (P1): `src/collection/scrapers/blog_scraper.py` — OpenAI/Anthropic/MSFT feeds, Appendix A A/B/C keyword rubric, append-only via `storage.append_to_raw_csv()`, resilience rate-limit + retry.
-  - BE-03 (P1): `src/collection/edgar_monitor.py` — SEC Atom poll for CIK 0000789019, `check_new_filings()` offline-safe, auto-sync path (EDGAR extract → clean → compute), `.github/workflows/edgar_sync.yml` weekly Monday 00:00 UTC.
-  - BE-05 (P2): `src/api/main.py` + `src/api/routes.py` — `/api/health|facts|events|sensitivity|stock/msft/live` (15m latency tag, cleaned-price fallback), `/api/simulate-portfolio` (weights sum 1.0±0.001, median-E-4Q scoring), CORS `*`; `fastapi/uvicorn/httpx` added to `requirements.txt`.
-  - Workflows `fast_rhythm.yml`/`slow_rhythm.yml` updated to commit `*.json` + `*.db` artifacts.
-  - Verified: `pytest` 35/35 passing (20 pre-existing + 15 new); `python run_pipeline.py --mode compute` regenerates DB + JSONs; live `check_new_filings()` ran clean (False); Python 3.11 compatible (typing.Optional, no new syntax).
+  - AICOR-020: `frontend/` — Vite 6 + React 19 + TypeScript + Tailwind v4 + Recharts + lucide-react (122 packages, 0 vulnerabilities). 8 components per FRONTEND_LAYER3_PLAN.md: Header (MSFT live badge + 15m latency label + sync status + methodology button), MetricCards (latest E/In/Out, spend, low-confidence warning), EChartViewer (3 E-lines, E=0 reference, quarter tooltip with events), InOutBreakdownChart (per-company In vs Out), RawMetricsChart (product/trends/spend selector), TimelineViewer (33 events, launch/funding/relationship filters), PortfolioSimulator (3 sliders locked to 100%, median-E scoring, mandatory amber disclaimer), MethodologyModal (formula, E meaning, D.1–D.8 limits), Footer (manifest UTC + local sync time).
+  - Invariants kept: FR-14 (all scores rendered verbatim from JSON; portfolio score uses only precomputed medians), FR-09/FR-10 (slider lock + disclaimer), FR-12 (latency label), no ROI/causality language.
+  - Dual-mode: static JSON default (`public/data/`, `base './'` portable, `.nojekyll`, `sync-data.mjs` + `prebuild` hook); live MSFT price via FastAPI with 4s-timeout silent fallback.
+  - Backend untouched: `pytest` still 35/35.
+  - Verified: `tsc -b` clean, `vite build` success in 11.3s (dist: 624KB JS / 188KB gzip incl. recharts), `vite preview` smoke test HTTP 200 on index + manifest + chart_series.
 - Exact next action:
-  - Layer 3 React Display (AICOR-020, still READY): consume `data/processed/chart_series.json`, `timeline_events.json`, `portfolio_baseline.json` + `manifest.json`; must not recalculate E (FR-14).
-  - Optional: verify first `edgar_sync.yml` weekly run on GitHub Actions.
+  - Optional: `cd frontend && npm run dev` for visual review; deploy `frontend/dist` to GitHub Pages/Vercel (IF-6); future pipeline runs refresh JSONs via `npm run sync-data`.

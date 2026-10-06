@@ -61,5 +61,14 @@
 - Verified: `pytest` 35/35 passing (20 pre-existing + 15 new: test_db 3, test_exporter 1, test_scrapers 3, test_edgar_monitor 3, test_api 5); Python 3.11 compatible (typing.Optional, stdlib XML, no new syntax); math logic untouched (E = Out − In, within-company z, std=0→0).
 - Updated `.ai/TASKS.md` (BE tasks → DONE, AICOR-020 React remains READY), `.ai/HANDOFF.md`, `.ai/PROJECT_STATE.md`.
 
+## 2026-10-06 — Phase 7 Layer 3 React Display (AICOR-020)
+
+- Scaffolded `frontend/` manually (deterministic, no interactive `npm create`): Vite 6 + React 19 + TS + Tailwind v4 + Recharts + lucide-react; `npm install` clean (122 packages, 0 vulnerabilities).
+- Implemented `src/types/aicor.ts` (bundle contracts matching exporter output), `src/services/dataService.ts` (static-JSON default + FastAPI live-stock fallback with 4s abort, money/score formatters), and 8 components: Header, MetricCards, EChartViewer, InOutBreakdownChart, RawMetricsChart, TimelineViewer, PortfolioSimulator, MethodologyModal, Footer, plus `App.tsx` tab layout.
+- Kept invariants: FR-14 (verbatim JSON values; portfolio uses precomputed medians only), FR-09/FR-10 (100%-locked sliders + amber disclaimer), FR-12 (15-minute latency label), Vietnamese UI, no ROI/causality wording.
+- Added `scripts/sync-data.mjs` + `prebuild` hook, `base './'` portable build, `public/.nojekyll`, `frontend/README.md`; `.gitignore` covers `frontend/node_modules/` + `frontend/dist/`; committed `public/data/*.json` so the app runs standalone.
+- Verified: `tsc -b` clean, `vite build` success in 11.3s, `vite preview` smoke test HTTP 200 on `/`, `/data/manifest.json`, `/data/chart_series.json`; backend `pytest` still 35/35 (untouched).
+- Updated `.ai/TASKS.md` (AICOR-020 → DONE, READY empty), `.ai/HANDOFF.md`, `.ai/PROJECT_STATE.md`.
+
 
 

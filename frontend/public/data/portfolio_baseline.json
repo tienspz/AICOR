@@ -1,0 +1,16 @@
+{
+  "generated_at": "2026-10-06T14:28:03Z",
+  "reference_window": [
+    "2025-Q3",
+    "2025-Q4",
+    "2026-Q1",
+    "2026-Q2"
+  ],
+  "method": "median(E) of the 4 most recent quarters per company; portfolio score = sum(w_c * median(E_c)).",
+  "medians": {
+    "MSFT": -1.304,
+    "OpenAI": -1.661,
+    "Anthropic": -1.296
+  },
+  "disclaimer": "Công cụ minh họa, không phải khuyến nghị đầu tư."
+}
