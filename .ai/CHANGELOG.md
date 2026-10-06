@@ -47,5 +47,7 @@
 - Implemented `src/computation/`: `aggregator.py` (Product score = 3A+2B+1C, rolling 4Q MAs), `calculator.py` (within-company z-score with std=0 guard, $E = Out - In$), `sensitivity.py` (3 weight presets evaluation), `pipeline.py` (exported 54 records to `data/processed/fact_quarterly.csv`, `sensitivity_analysis.csv`, and `manifest.json`).
 - Implemented unified CLI `run_pipeline.py` and GitHub Actions workflows (`fast_rhythm.yml`, `slow_rhythm.yml`).
 - Tested with 20/20 passing pytest unit tests.
+- Fixed missing `Optional` import in `src/cleaning/cleaner.py` and `src/computation/aggregator.py` for Python 3.11 compatibility on GitHub Actions.
+
 
 
