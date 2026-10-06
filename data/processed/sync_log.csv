@@ -1,0 +1,5 @@
+run_at,rhythm,status,rows_added,error
+2026-10-06T06:17:17Z,clean,success,159,
+2026-10-06T06:19:09Z,compute,success,54,
+2026-10-06T06:20:33Z,clean,success,159,
+2026-10-06T06:20:39Z,compute,success,54,

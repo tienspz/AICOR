@@ -1,0 +1,8 @@
+pandas>=2.0.0
+numpy>=1.24.0
+requests>=2.28.0
+beautifulsoup4>=4.12.0
+pytrends>=4.9.0
+yfinance>=0.2.30
+pytest>=8.0.0
+pydantic>=2.0.0

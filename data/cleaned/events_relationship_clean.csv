@@ -1,0 +1,5 @@
+event_date,quarter,parties,rel_type,quote,source_url
+2023-01-23,2023-Q1,"Microsoft, OpenAI","invest, partner","Microsoft and OpenAI announce third phase of long-term partnership with multiyear, multibillion dollar investment.",https://blogs.microsoft.com/blog/2023/01/23/partnership/
+2023-11-17,2023-Q4,"Microsoft, OpenAI","partner, statement",Satya Nadella: 'We remain committed to our partnership with OpenAI and have complete confidence in our product roadmap.',https://twitter.com/satyanadella/status/1725659850116804868
+2024-03-19,2024-Q1,"Microsoft, OpenAI, Anthropic","partner, compete","Microsoft hires Inflection founders and diversifies model catalog with Anthropic Claude on Azure and Mistral AI, competing directly while maintaining OpenAI partnership.",https://azure.microsoft.com/en-us/blog/models-on-azure/
+2024-07-10,2024-Q3,"Microsoft, OpenAI","statement, compete",Microsoft yields observer seat on OpenAI board amid antitrust scrutiny in US and Europe; list OpenAI as a competitor in annual 10-K filing.,https://www.bloomberg.com/news/articles/2024-07-10/microsoft-gives-up-openai-board-seat

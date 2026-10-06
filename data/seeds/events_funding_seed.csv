@@ -1,0 +1,7 @@
+company_id,company_name,funding_date,quarter,amount,valuation,source_url
+2,OpenAI,2023-01-23,2023-Q1,10000000000,29000000000,https://blogs.microsoft.com/blog/2023/01/23/microsoft-and-openai-extend-partnership/
+2,OpenAI,2024-10-02,2024-Q4,6600000000,157000000000,https://openai.com/index/scale-ai-infrastructure/
+3,Anthropic,2023-02-03,2023-Q1,300000000,4100000000,https://www.ft.com/content/google-invests-in-anthropic
+3,Anthropic,2023-09-25,2023-Q3,4000000000,18000000000,https://www.aboutamazon.com/news/company-news/amazon-anthropic-partnership
+3,Anthropic,2023-10-27,2023-Q4,2000000000,20000000000,https://www.wsj.com/tech/ai/google-invests-2-billion-anthropic
+3,Anthropic,2024-11-22,2024-Q4,4000000000,40000000000,https://www.aboutamazon.com/news/company-news/amazon-additional-investment-anthropic
