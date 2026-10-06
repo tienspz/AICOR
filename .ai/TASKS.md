@@ -6,12 +6,7 @@ None.
 
 ## READY
 
-- AICOR-016 — Task BE-01: SQLite Database Engine & CSV-to-SQLite Loader (`src/computation/db.py`, `tests/test_db.py`). Priority: P0. Acceptance: 6 tables created per SRS 3.4; `sync_csv_to_sqlite()` upserts cleaned CSVs and fact_quarterly into `data/processed/aicor.db`.
-- AICOR-017 — Task BE-04: Pre-computed Web JSON Bundles Exporter (`src/computation/exporter.py`, `tests/test_exporter.py`). Priority: P0. Acceptance: Produces `chart_series.json`, `timeline_events.json`, `portfolio_baseline.json` for fast React frontend consumption without client-side recalculation of E.
-- AICOR-018 — Task BE-02: Automated RSS/Blog Scraper (`src/collection/scrapers/blog_scraper.py`, `tests/test_scrapers.py`). Priority: P1. Acceptance: Scrapes official feeds of OpenAI, Anthropic, Microsoft AI; auto-tags A/B/C categories per Appendix A; appends to `events_launch_raw.csv`.
-- AICOR-019 — Task BE-03: SEC EDGAR 10-Q Filing Monitor & Alert (`src/collection/edgar_monitor.py`, `.github/workflows/edgar_sync.yml`). Priority: P1. Acceptance: Polls SEC Atom feed for Microsoft CIK 0000789019, detects new 10-Q, triggers R&D extraction and pipeline recalculation.
 - AICOR-020 — Build Layer 3 Display (React Web App) consuming `data/processed/` precomputed assets and `manifest.json`. Priority: P1. Acceptance: Interactive 3-company quarterly E-score chart, In/Out breakdown, event timeline overlay, illustrative portfolio allocation tool (FR-09, FR-10), without recalculating E in React.
-- AICOR-021 — Task BE-05: FastAPI REST Service & Live Stock Widget (`src/api/main.py`, `src/api/routes.py`, `tests/test_api.py`). Priority: P2. Acceptance: Exposes `/api/facts`, `/api/events`, `/api/stock/msft/live` (15m latency tag per FR-12), and `/api/simulate-portfolio`.
 
 ## BLOCKED
 
@@ -31,6 +26,11 @@ None.
 - AICOR-014A — Implement Layer 2 Data Cleaner & Validation (`src/cleaning/cleaner.py`). Priority: P1. Acceptance: Mandatory validation, rubric categorization, export cleaned CSVs to `data/cleaned/*.csv`. Verify: 3 tests passing, 159 cleaned rows saved.
 - AICOR-014B — Implement Layer 2 Computation & Final Quarterly Fact CSV (`src/computation/`). Priority: P1. Acceptance: 4Q MA, within-company z-score with std=0 guard, E = Out - In, 3-weight sensitivity analysis, export to `data/processed/fact_quarterly.csv`. Verify: 4 tests passing, 54 quarterly facts produced.
 - AICOR-015 — Configure GitHub Actions & CLI Runner for Auto-crawl (`.github/workflows/`, `run_pipeline.py`). Priority: P2. Acceptance: Fast rhythm (6h), slow rhythm (24h), SEC EDGAR trigger, local CLI. Verify: CLI test passing.
+- AICOR-016 — Task BE-01: SQLite Database Engine & CSV-to-SQLite Loader (`src/computation/db.py`, `tests/test_db.py`). Priority: P0. Acceptance: 6 tables per SRS 3.4; `sync_csv_to_sqlite()` loads fact_quarterly + events into `data/processed/aicor.db`. Verify: 3 tests passing; live `aicor.db` has 54 fact rows; pipeline-integrated.
+- AICOR-017 — Task BE-04: Pre-computed Web JSON Bundles Exporter (`src/computation/exporter.py`, `tests/test_exporter.py`). Priority: P0. Acceptance: `chart_series.json`, `timeline_events.json`, `portfolio_baseline.json` with disclaimer, NaN→null. Verify: 1 test passing; pipeline-integrated.
+- AICOR-018 — Task BE-02: Automated RSS/Blog Scraper (`src/collection/scrapers/blog_scraper.py`, `tests/test_scrapers.py`). Priority: P1. Acceptance: Official OpenAI/Anthropic/MSFT feeds; A/B/C auto-tag per Appendix A; append-only via storage; resilience rate-limit. Verify: 3 mock-feed tests passing.
+- AICOR-019 — Task BE-03: SEC EDGAR 10-Q Filing Monitor & Alert (`src/collection/edgar_monitor.py`, `.github/workflows/edgar_sync.yml`). Priority: P1. Acceptance: SEC Atom poll for CIK 0000789019, `check_new_filings()` offline-safe, auto-sync + weekly workflow. Verify: 3 mock tests passing; live `check_new_filings()` ran without error (False).
+- AICOR-021 — Task BE-05: FastAPI REST Service & Live Stock Widget (`src/api/main.py`, `src/api/routes.py`, `tests/test_api.py`). Priority: P2. Acceptance: `/api/health|facts|events|sensitivity|stock/msft/live` (15m latency tag), `/api/simulate-portfolio` (sum=1.0±0.001), CORS `*`. Verify: 5 TestClient tests passing.
 
 
 

@@ -19,7 +19,8 @@ from src.collection.storage import log_sync_event, get_sync_timestamp
 from src.computation.aggregator import aggregate_quarterly_data
 from src.computation.calculator import calculate_indices
 from src.computation.sensitivity import run_sensitivity_analysis
-
+from src.computation.db import sync_csv_to_sqlite
+from src.computation.exporter import export_web_json_bundles
 logger = logging.getLogger("aicor.computation.pipeline")
 
 
@@ -87,6 +88,10 @@ def run_computation_pipeline(
             "fact_quarterly_csv": "data/processed/fact_quarterly.csv",
             "sensitivity_analysis_csv": "data/processed/sensitivity_analysis.csv",
             "sync_log_csv": "data/processed/sync_log.csv",
+            "sqlite_db": "data/processed/aicor.db",
+            "chart_series_json": "data/processed/chart_series.json",
+            "timeline_events_json": "data/processed/timeline_events.json",
+            "portfolio_baseline_json": "data/processed/portfolio_baseline.json",
         }
     }
     manifest_file = out_dir / "manifest.json"
@@ -94,7 +99,23 @@ def run_computation_pipeline(
         json.dump(manifest_data, f, indent=2)
     logger.info(f"Updated {manifest_file.name}.")
 
-    # 7. Record sync_log.csv
+    # 7. Sync cleaned + processed CSVs into SQLite (BE-01, FR-11/3.4)
+    try:
+        sqlite_counts = sync_csv_to_sqlite(out_dir / "aicor.db")
+        logger.info(f"SQLite sync completed: {sqlite_counts}")
+    except Exception as e:
+        logger.warning(f"SQLite sync skipped/failed (keeping CSV outputs): {e}")
+        sqlite_counts = {}
+
+    # 8. Export pre-computed JSON bundles for React (BE-04, FR-14/NFR-01)
+    try:
+        json_bundles = export_web_json_bundles(out_dir)
+        logger.info(f"JSON bundles exported: {list(json_bundles.keys())}")
+    except Exception as e:
+        logger.warning(f"JSON bundle export skipped/failed (keeping CSV outputs): {e}")
+        json_bundles = {}
+
+    # 9. Record sync_log.csv
     log_sync_event(
         rhythm="compute",
         status="success",
@@ -107,4 +128,6 @@ def run_computation_pipeline(
         "sensitivity_rows_count": len(sensitivity_rows),
         "quarters": quarters,
         "manifest": manifest_data,
+        "sqlite_counts": sqlite_counts,
+        "json_bundles": json_bundles,
     }

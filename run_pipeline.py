@@ -126,6 +126,10 @@ def main():
         logger.info("  - data/processed/sensitivity_analysis.csv")
         logger.info("  - data/processed/sync_log.csv")
         logger.info("  - data/processed/manifest.json")
+        logger.info("  - data/processed/aicor.db")
+        logger.info("  - data/processed/chart_series.json")
+        logger.info("  - data/processed/timeline_events.json")
+        logger.info("  - data/processed/portfolio_baseline.json")
 
 
 if __name__ == "__main__":

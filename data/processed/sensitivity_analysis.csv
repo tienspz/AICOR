@@ -9,7 +9,7 @@ quarter,weight_set,product_weight,trends_weight,msft_out,openai_out,anthropic_ou
 2022-Q3,Set 2 (Balanced),0.5,0.5,-0.988,-0.82,-0.974,0.092,0.368,0.126,OpenAI > Anthropic > Microsoft,False
 2022-Q3,Set 3 (Product-heavy),0.7,0.3,-1.055,-0.667,-1.087,0.025,0.522,0.013,OpenAI > Microsoft > Anthropic,False
 2022-Q4,Set 1 (Default),0.6,0.4,-1.015,-0.283,-1.029,-0.162,0.787,0.02,OpenAI > Anthropic > Microsoft,True
-2022-Q4,Set 2 (Balanced),0.5,0.5,-0.981,-0.408,-0.972,-0.127,0.661,0.077,OpenAI > Anthropic > Microsoft,True
+2022-Q4,Set 2 (Balanced),0.5,0.5,-0.981,-0.408,-0.971,-0.127,0.661,0.077,OpenAI > Anthropic > Microsoft,True
 2022-Q4,Set 3 (Product-heavy),0.7,0.3,-1.05,-0.158,-1.086,-0.197,0.912,-0.037,OpenAI > Anthropic > Microsoft,True
 2023-Q1,Set 1 (Default),0.6,0.4,-0.15,0.469,-0.483,0.556,1.361,0.463,OpenAI > Microsoft > Anthropic,True
 2023-Q1,Set 2 (Balanced),0.5,0.5,-0.245,0.286,-0.513,0.461,1.178,0.433,OpenAI > Microsoft > Anthropic,True
@@ -43,7 +43,7 @@ quarter,weight_set,product_weight,trends_weight,msft_out,openai_out,anthropic_ou
 2025-Q2,Set 3 (Product-heavy),0.7,0.3,-0.075,0.356,0.166,-0.91,-0.498,-0.692,OpenAI > Anthropic > Microsoft,True
 2025-Q3,Set 1 (Default),0.6,0.4,0.143,-0.04,0.285,-0.955,-1.131,-0.829,Anthropic > Microsoft > OpenAI,True
 2025-Q3,Set 2 (Balanced),0.5,0.5,0.207,0.06,0.299,-0.89,-1.032,-0.815,Anthropic > Microsoft > OpenAI,True
-2025-Q3,Set 3 (Product-heavy),0.7,0.3,0.078,-0.139,0.272,-1.019,-1.23,-0.842,Anthropic > Microsoft > OpenAI,True
+2025-Q3,Set 3 (Product-heavy),0.7,0.3,0.078,-0.139,0.272,-1.019,-1.231,-0.842,Anthropic > Microsoft > OpenAI,True
 2025-Q4,Set 1 (Default),0.6,0.4,0.217,-0.178,0.118,-1.143,-1.506,-1.252,Microsoft > Anthropic > OpenAI,True
 2025-Q4,Set 2 (Balanced),0.5,0.5,0.387,0.05,0.238,-0.973,-1.278,-1.132,Microsoft > Anthropic > OpenAI,True
 2025-Q4,Set 3 (Product-heavy),0.7,0.3,0.047,-0.406,-0.003,-1.313,-1.735,-1.372,Microsoft > Anthropic > OpenAI,True

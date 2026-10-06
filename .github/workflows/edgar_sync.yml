@@ -1,15 +1,15 @@
-name: AICOR Fast Rhythm Sync (Every 6h)
+name: AICOR EDGAR 10-Q Monitor (Weekly)
 
 on:
   schedule:
-    - cron: '0 */6 * * *'
+    - cron: '0 0 * * 1'
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  sync_fast:
+  edgar_monitor:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -29,19 +29,19 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run Fast Rhythm Crawlers (Stock & Google Trends)
+      - name: Check SEC EDGAR for new MSFT 10-Q and auto-sync
         run: |
-          python run_pipeline.py --mode crawl --rhythm fast
+          python -c "from src.collection.edgar_monitor import run_edgar_monitor; print(run_edgar_monitor(auto_sync=True))"
 
       - name: Commit and push changes
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/raw/*.csv data/processed/sync_log.csv data/processed/*.json data/processed/*.db
+          git add data/raw/*.csv data/cleaned/*.csv data/processed/*.csv data/processed/*.json data/processed/*.db data/processed/manifest.json
           if [ -n "$(git status --porcelain)" ]; then
-            echo "New data detected. Committing and pushing..."
-            git commit -m "Auto-sync (fast rhythm 6h): update stock and trends [skip ci]"
+            echo "New EDGAR data detected. Committing and pushing..."
+            git commit -m "Auto-sync (edgar rhythm weekly): detect new MSFT 10-Q and recompute [skip ci]"
             git push origin main
           else
-            echo "No new data changes detected. Everything is up-to-date."
+            echo "No new EDGAR filing. Everything is up-to-date."
           fi

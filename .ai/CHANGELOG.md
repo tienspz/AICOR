@@ -50,5 +50,16 @@
 - Fixed missing `Optional` import in `src/cleaning/cleaner.py` and `src/computation/aggregator.py` for Python 3.11 compatibility on GitHub Actions.
 - Formulated `BACKEND_EXTENSION_PLAN.md` detailing 5 extension tasks (BE-01 SQLite Engine, BE-02 Blog Scraper, BE-03 EDGAR Monitor, BE-04 JSON Bundles Exporter, BE-05 FastAPI Service) and ready-to-use prompts for OpenCode and Freebuff.
 
+## 2026-10-06 — Phase 6 Backend Extensions Implementation (BE-01 through BE-05)
+
+- Implemented BE-01: `src/computation/db.py` (6 tables per SRS 3.4, `init_database`, `populate_dim_companies`, `sync_csv_to_sqlite` with INSERT OR REPLACE facts + idempotent event resync) and wired into `run_computation_pipeline()`; live `data/processed/aicor.db` holds 54 fact_quarterly rows.
+- Implemented BE-04: `src/computation/exporter.py` (`chart_series.json` MSFT/OpenAI/Anthropic series, `timeline_events.json` 33 date-sorted events, `portfolio_baseline.json` median-E-4Q + "minh hoa, khong phai khuyen nghi dau tu" disclaimer, NaN→null) and wired into pipeline.
+- Implemented BE-02: `src/collection/scrapers/blog_scraper.py` (OpenAI/Anthropic/Microsoft feeds, Appendix A keyword rubric, AI filter for MSFT feed, resilience rate-limit + retry, append-only storage) with mock-feed tests.
+- Implemented BE-03: `src/collection/edgar_monitor.py` (SEC Atom poll CIK 0000789019, `check_new_filings()` offline-safe, auto-sync EDGAR→clean→compute, `log_sync_event` rhythm edgar) + `.github/workflows/edgar_sync.yml` (weekly Mon 00:00 UTC); live check ran clean.
+- Implemented BE-05: `src/api/main.py` + `src/api/routes.py` (health/facts/events/sensitivity/stock-msft-live with 15m latency tag and cleaned-price fallback/simulate-portfolio sum=1.0±0.001 median-E scoring, CORS *); added `fastapi/uvicorn/httpx` to `requirements.txt`.
+- Updated `fast_rhythm.yml`/`slow_rhythm.yml` to commit `*.json` + `*.db` artifacts; extended pipeline manifest artifacts and CLI output listing.
+- Verified: `pytest` 35/35 passing (20 pre-existing + 15 new: test_db 3, test_exporter 1, test_scrapers 3, test_edgar_monitor 3, test_api 5); Python 3.11 compatible (typing.Optional, stdlib XML, no new syntax); math logic untouched (E = Out − In, within-company z, std=0→0).
+- Updated `.ai/TASKS.md` (BE tasks → DONE, AICOR-020 React remains READY), `.ai/HANDOFF.md`, `.ai/PROJECT_STATE.md`.
+
 
 
