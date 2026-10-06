@@ -11,10 +11,11 @@
   - Phase 6: Layer 2 Computation Engine (`src/computation/`), within-company z-score normalization, rolling 4Q moving averages, $E = Out - In$, 3-weight sensitivity analysis, exported to `data/processed/fact_quarterly.csv`, `sensitivity_analysis.csv`, and `manifest.json` (54 quarterly facts).
   - Phase 7: Unified CLI runner (`run_pipeline.py`) and GitHub Actions workflows (`fast_rhythm.yml`, `slow_rhythm.yml`).
   - Test suite: 20/20 pytest unit tests passing.
-- In progress: Ready for Layer 3 (React Web App / Display) if requested.
-- Pending: React UI implementation consuming `data/processed/fact_quarterly.csv`.
-- Known issues: workspace is not a Git repository.
-- Last verified checks: 20 pytest unit tests passing; CLI clean and compute modes verified; `data/processed/fact_quarterly.csv` and `data/processed/manifest.json` generated and verified.
-- Architecture status: Layer 1 (Collection) and Layer 2 (Computation) are fully implemented, verified, and operational.
+- In progress: Local Git repository initialized on branch `main` (commit `8ac2402`). Ready for user to create GitHub remote and push.
+- Pending: Push to GitHub remote and enable GitHub Actions Write permissions.
+- Known issues: Remote origin not yet linked (waiting for user repository URL).
+- Last verified checks: Git repo initialized, `.gitignore` created; 20/20 pytest tests passing; initial commit `8ac2402` contains 77 files.
+- Architecture status: Layer 1 (Collection) and Layer 2 (Computation) are fully implemented, verified, committed, and ready for cloud auto-sync.
+
 
 
