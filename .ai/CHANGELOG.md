@@ -48,6 +48,7 @@
 - Implemented unified CLI `run_pipeline.py` and GitHub Actions workflows (`fast_rhythm.yml`, `slow_rhythm.yml`).
 - Tested with 20/20 passing pytest unit tests.
 - Fixed missing `Optional` import in `src/cleaning/cleaner.py` and `src/computation/aggregator.py` for Python 3.11 compatibility on GitHub Actions.
+- Formulated `BACKEND_EXTENSION_PLAN.md` detailing 5 extension tasks (BE-01 SQLite Engine, BE-02 Blog Scraper, BE-03 EDGAR Monitor, BE-04 JSON Bundles Exporter, BE-05 FastAPI Service) and ready-to-use prompts for OpenCode and Freebuff.
 
 
 
