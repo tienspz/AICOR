@@ -7,7 +7,7 @@ Aggregates cleaned data by company and quarter:
 """
 import csv
 import logging
-from typing import Dict, List, Any, Tuple
+from typing import Dict, List, Any, Tuple, Optional
 from collections import defaultdict
 from pathlib import Path
 
@@ -32,17 +32,19 @@ def build_company_quarter_index(start_year: int = 2022, end_year: int = 2026, ma
     return cq_list
 
 
-def aggregate_quarterly_data(cleaned_dir: Path = CLEANED_DATA_DIR) -> Dict[Tuple[int, str], Dict[str, Any]]:
+def aggregate_quarterly_data(cleaned_dir: Optional[Path] = None) -> Dict[Tuple[int, str], Dict[str, Any]]:
     """
     Reads cleaned CSV files and aggregates metrics by (company_id, quarter).
     Returns a dictionary keyed by (company_id, quarter).
     """
+    in_dir = cleaned_dir or CLEANED_DATA_DIR
     # 1. Initialize dictionary for all company-quarters
     cq_index = build_company_quarter_index()
     fact_dict = {}
     for cid, q in cq_index:
         fact_dict[(cid, q)] = {
             "company_id": cid,
+
             "company_name": COMPANIES[cid]["name"],
             "quarter": q,
             "rnd_spend": None,
@@ -59,7 +61,7 @@ def aggregate_quarterly_data(cleaned_dir: Path = CLEANED_DATA_DIR) -> Dict[Tuple
         }
 
     # 2. Ingest Microsoft R&D spend
-    rnd_file = cleaned_dir / "rnd_msft_clean.csv"
+    rnd_file = in_dir / "rnd_msft_clean.csv"
     if rnd_file.exists():
         with open(rnd_file, "r", encoding="utf-8") as f:
             for r in csv.DictReader(f):
@@ -71,7 +73,7 @@ def aggregate_quarterly_data(cleaned_dir: Path = CLEANED_DATA_DIR) -> Dict[Tuple
                     fact_dict[(cid, q)]["est_confidence"] = "high"
 
     # 3. Ingest AI spend estimates (OpenAI & Anthropic)
-    spend_file = cleaned_dir / "ai_spend_est_clean.csv"
+    spend_file = in_dir / "ai_spend_est_clean.csv"
     if spend_file.exists():
         with open(spend_file, "r", encoding="utf-8") as f:
             for r in csv.DictReader(f):
@@ -84,7 +86,7 @@ def aggregate_quarterly_data(cleaned_dir: Path = CLEANED_DATA_DIR) -> Dict[Tuple
                     fact_dict[(cid, q)]["est_confidence"] = conf
 
     # 4. Ingest Product Launches & sum points (Phụ lục A: 3A + 2B + 1C)
-    launch_file = cleaned_dir / "events_launch_clean.csv"
+    launch_file = in_dir / "events_launch_clean.csv"
     if launch_file.exists():
         with open(launch_file, "r", encoding="utf-8") as f:
             for r in csv.DictReader(f):
@@ -95,7 +97,7 @@ def aggregate_quarterly_data(cleaned_dir: Path = CLEANED_DATA_DIR) -> Dict[Tuple
                     fact_dict[(cid, q)]["product_score"] += pts
 
     # 5. Ingest Google Trends & calculate quarterly average
-    trends_file = cleaned_dir / "trends_clean.csv"
+    trends_file = in_dir / "trends_clean.csv"
     trends_sums = defaultdict(float)
     trends_counts = defaultdict(int)
     if trends_file.exists():
