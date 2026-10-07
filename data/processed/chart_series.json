@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-06T14:28:03Z",
+  "generated_at": "2026-10-07T08:08:22Z",
   "quarters": [
     "2022-Q1",
     "2022-Q2",
@@ -406,7 +406,7 @@
           "trends_qavg": 13.93,
           "product_score": 0.0,
           "product_ma4q": 1.0,
-          "trends_ma4q": 14.863,
+          "trends_ma4q": 14.862,
           "valid_from": "2024-03-31"
         },
         {
@@ -594,7 +594,7 @@
           "trends_qavg": 0.43,
           "product_score": 0.0,
           "product_ma4q": 0.0,
-          "trends_ma4q": 0.273,
+          "trends_ma4q": 0.272,
           "valid_from": "2022-12-31"
         },
         {
@@ -664,7 +664,7 @@
           "trends_qavg": 5.36,
           "product_score": 3.0,
           "product_ma4q": 2.0,
-          "trends_ma4q": 3.667,
+          "trends_ma4q": 3.668,
           "valid_from": "2024-03-31"
         },
         {
