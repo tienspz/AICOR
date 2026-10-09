@@ -1199,3 +1199,4 @@ company_id,date,quarter,close_price,source_url
 1,2026-10-05,2026-Q4,525.18,https://finance.yahoo.com/quote/MSFT?latency=15m
 1,2026-10-06,2026-Q4,531.25,https://finance.yahoo.com/quote/MSFT?latency=15m
 1,2026-10-07,2026-Q4,529.76,https://finance.yahoo.com/quote/MSFT?latency=15m
+1,2026-10-08,2026-Q4,522.61,https://finance.yahoo.com/quote/MSFT?latency=15m
