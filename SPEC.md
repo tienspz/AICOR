@@ -92,7 +92,7 @@ Các nội dung sau bị loại khỏi vai trò bằng chứng tài chính chín
 * tuyên bố trên mạng xã hội chưa được kiểm chứng;
 * các con số "chi tiêu cho AI" chung chung, không có nguồn;
 * so sánh công ty phần cứng để thay thế cho phân tích phần mềm/đám mây;
-\1\n* dữ liệu giả (mock) hoặc bất kỳ biến nào không có nguồn thật lấy về được, gồm đầu tư AI trực tiếp, Copilot, Gemini.
+* dữ liệu giả (mock) hoặc bất kỳ biến nào không có nguồn thật lấy về được, gồm đầu tư AI trực tiếp, Copilot, Gemini.
 
 ## 1.4 Định nghĩa, thuật ngữ và viết tắt **[BỔ SUNG]**
 
