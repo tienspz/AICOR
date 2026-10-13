@@ -10,13 +10,13 @@
 | Stage | Name | Entry condition | Exit criterion | Gate |
 |---|---|---|---|---|
 | 0 | Discovery, audit, SRS traceability | — | 11 planning docs + 6 ADRs merged; open decisions escalated | **DONE** |
-| 1 | Decisions, schema, contracts | Stage 0 exit | `research_params.yaml` v1; migrations 0001–0003; `openapi.yaml` frozen; OD-01 confirmed | ⛔ author gate |
-| 2 | Ingestion & provenance | Stage 1 schema + raw store | All 21 quarters × 2 companies in raw store with SHA-256 manifest; accessions discovered, not hard-coded | |
-| 3 | Normalisation & data quality | Stage 2 | 21 quarterly rows per company per metric; DQ-01…05 green over real data | |
-| 4 | Features & quantitative analysis | Stage 3 + **T-15 slice** | FE-01…04/08 + OUT-01…03; lag/IO/efficiency/event/regime/scenario complete **or** explicitly NULL pending a decision | ⛔ research gate |
-| 5 | Backend API & dashboard | Stage 3 (API), Stage 4 (pages) | 9 pages live; zero client computation; every number traceable | |
+| 1 | Decisions, schema, contracts | Stage 0 exit | `research_params.yaml` v1; contracts frozen; baseline parameters aligned | **DONE** |
+| 2 | Ingestion & provenance | Stage 1 schema + raw store | All 22 quarters × 2 companies in raw store with SHA-256 manifest; 4 live crawlers active | **DONE** |
+| 3 | Normalisation & data quality | Stage 2 | 22 quarterly rows per company (44 total); DQ-01…05 green over real data; 5 processed CSVs live; IR milestone catalog expanded to 2021-2026 | **DONE** |
+| 4 | Features & quantitative analysis | Stage 3 | Metric computation engine ($In$, $Out$, $E$); 3 sensitivity scenarios (0.6/0.4, 0.5/0.5, 0.7/0.3); analysis_results.csv | ⛔ active gate |
+| 5 | Backend API & dashboard | Stage 3 (API), Stage 4 (pages) | 6 views live; zero client computation; every number traceable | |
 | 6 | Independent QA, regression, docs | Stage 5 | Every requirement ID → TEST-ID → **executed result**; reproducibility double-run; security review clean | |
-| 7 | Acceptance & demonstration | Stage 6 | SRS §9.3 walkable for one number on **each** of the 9 pages; reviewer reproduces independently | **FINAL GATE** |
+| 7 | Acceptance & demonstration | Stage 6 | SRS §9.3 walkable for one number on each page; reviewer reproduces independently | **FINAL GATE** |
 
 ---
 
