@@ -17,6 +17,11 @@ def test_company_cik_locked():
 def test_settings_override_from_env():
     s = get_settings(env={"SEC_USER_AGENT": "Custom/2.0 (test)"})
     assert s.sec_user_agent == "Custom/2.0 (test)"
+    # Empty string should safely fallback to default
+    s_empty = get_settings(env={"SEC_USER_AGENT": ""})
+    assert "AICOR" in s_empty.sec_user_agent
+    s_whitespace = get_settings(env={"SEC_USER_AGENT": "   "})
+    assert "AICOR" in s_whitespace.sec_user_agent
 
 
 def test_settings_frozen():

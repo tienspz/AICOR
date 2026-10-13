@@ -48,7 +48,8 @@ def get_settings(env: dict[str, str] | None = None) -> Settings:
     if env is None:
         env = dict(os.environ)
 
+    sec_ua = env.get("SEC_USER_AGENT")
     return Settings(
-        sec_user_agent=env.get("SEC_USER_AGENT", Settings.sec_user_agent),
+        sec_user_agent=sec_ua.strip() if sec_ua and sec_ua.strip() else Settings.sec_user_agent,
         data_dir=env.get("AICOR_DATA_DIR", Settings.data_dir),
     )
