@@ -41,7 +41,7 @@ Giai đoạn Phase 1 đã hoàn thành toàn bộ mục tiêu theo Lecture 07 v�
      - Đã tạo 5 bảng CSV sạch tại `data/processed/`:
        1. `financial_quarterly.csv`: 44 hàng (22 quý × 2 công ty) chuẩn hóa đơn vị triệu USD.
        2. `panel_quarterly.csv`: Bảng panel hợp nhất với `is_msft`, `rd_intensity`, `capex_intensity`.
-       3. `ai_products.csv`: 40 sự kiện AI đã phân loại A/B/C kèm lý do giải trình.
+       3. `ai_products.csv`: 94 sự kiện AI (2021-2026, 24 quý) đã phân loại A/B/C kèm lý do giải trình.
        4. `google_trends_quarterly.csv`: Điểm quan tâm tìm kiếm gộp trung bình theo quý.
        5. `market_quarterly.csv`: Giá đóng cửa điều chỉnh TB và tổng khối lượng giao dịch quý.
      - **Giải quyết triệt để Q4 GOOGL:** Sửa đổi logic gom nhóm liên tag (cross-tag pooling) để tính đúng $Q_4 = FY - 9M$ thay vì lấy nhầm số cả năm $FY$.
