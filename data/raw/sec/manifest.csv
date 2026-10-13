@@ -1,0 +1,3 @@
+filename,sha256,source_url,retrieved_at
+sec_789019_20261013T150410Z.json,7eb47afc4460421719b62a5726c0173d471cc8ffc53db8fabe1bde24ed0ffd57,https://data.sec.gov/api/xbrl/companyfacts/CIK0000789019.json,20261013T150410Z
+sec_1652044_20261013T150411Z.json,4ae19ee116eed252562b95f6881e5e9f4bf67e6106782ddb8b72cc9508b16ca7,https://data.sec.gov/api/xbrl/companyfacts/CIK0001652044.json,20261013T150411Z
