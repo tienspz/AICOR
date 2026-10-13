@@ -1,0 +1,55 @@
+# ---------------------------------------------------------------------------
+# AICOR — AI Investment & Corporate Outcome Research
+# NOTE: Markdown is deliberately NOT ignored. The SRS, ADRs, planning
+# documents and decision records are the audit trail for NFR-01
+# (reproducibility), NFR-02 (traceability) and NFR-03 (config versioning).
+# ---------------------------------------------------------------------------
+
+# AI assistant configuration, skills, and vendored sources
+.agents/
+.opencode/
+.vibecode/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# --- Node / Next.js ---
+node_modules/
+.next/
+out/
+.turbo/
+*.tsbuildinfo
+
+# --- Secrets (never commit; see .env.example) ---
+.env
+.env.*
+!.env.example
+
+# --- Raw snapshot layer ---
+# Raw *binaries/documents* are large (SEC filings are multi-MB). They are
+# reproduced byte-for-byte from the pipeline; provenance is preserved by the
+# committed manifest of SHA-256 hashes + source URLs, which IS tracked.
+data/raw/sec_documents/
+data/raw/ir_documents/
+*.htm
+*.html.tmp
+
+# --- Local databases / build output ---
+*.duckdb
+*.sqlite3
+data/*.db
+
+# --- OS / editor ---
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
+.idea/
