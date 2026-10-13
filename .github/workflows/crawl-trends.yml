@@ -1,0 +1,40 @@
+name: Crawl Google Trends (Tier B)
+
+on:
+  schedule:
+    - cron: "0 */12 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  crawl-trends:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --all-extras
+
+      - name: Run Google Trends crawler
+        run: uv run python -m aicor.sources.trends
+
+      - name: Validate data gates
+        run: uv run pytest -m "not live" -v
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/raw/trends/manifest.csv data/raw/trends/*.csv data/sync_log.csv || true
+          git diff --staged --quiet || git commit -m "chore(data): auto-update trends data [skip ci]"
+          git push || echo "No changes to push"

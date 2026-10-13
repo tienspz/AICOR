@@ -1,0 +1,42 @@
+name: Crawl SEC EDGAR (Tier S)
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  crawl-sec:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --all-extras
+
+      - name: Run SEC crawler
+        env:
+          SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT || 'AICOR-research/1.0 (contact: repo README)' }}
+        run: uv run python -m aicor.sources.sec
+
+      - name: Validate data gates
+        run: uv run pytest -m "not live" -v
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/raw/sec/manifest.csv data/raw/sec/*.json data/sync_log.csv || true
+          git diff --staged --quiet || git commit -m "chore(data): auto-update SEC data [skip ci]"
+          git push || echo "No changes to push"
