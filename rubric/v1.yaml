@@ -1,0 +1,48 @@
+# Provisional A/B/C classification rubric for IR product announcements
+# Status: provisional (v1) — awaiting final review per §15.1
+# DO NOT treat as finalized.
+
+version: "v1-provisional"
+provisional: true
+
+categories:
+  A:
+    label: "Major product launch / GA release"
+    score_weight: 3
+    examples:
+      - "Copilot GA"
+      - "Gemini 1.5 launch"
+      - "Azure OpenAI Service GA"
+    rules:
+      - "Publicly available product (not preview/beta)"
+      - "Named product with pricing or GA date"
+      - "Company-wide product line (e.g., Windows Copilot, Gemini Pro)"
+
+  B:
+    label: "Significant update / preview of major product"
+    score_weight: 2
+    examples:
+      - "Azure OpenAI Service preview"
+      - "Bard → Gemini rebrand"
+      - "GitHub Copilot Workspace preview"
+    rules:
+      - "Public preview or major version update"
+      - "Enterprise feature expansion"
+      - "Rebrand or major pivot of existing product"
+
+  C:
+    label: "Minor update / research announcement"
+    score_weight: 1
+    examples:
+      - "Research paper release"
+      - "Minor API update"
+      - "Regional rollout of existing feature"
+    rules:
+      - "Research-only with no product implication"
+      - "Incremental patch or regional rollout"
+      - "Developer tool minor update"
+
+# Notes on review_status flow (§6.3):
+#   pending  → item auto-classified, awaiting human review
+#   reviewed → human confirmed the category
+#   rejected → item excluded from scoring (not a real product)
