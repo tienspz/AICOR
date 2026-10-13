@@ -72,7 +72,7 @@ Các crawler hoạt động độc lập (NFR-04: một nguồn lỗi không là
 │   ├── processed/              # 5 tập dữ liệu tiền xử lý chuẩn hóa dạng bảng (Lecture 07)
 │   │   ├── financial_quarterly.csv     # Bảng tài chính 22 quý, chuẩn hóa triệu USD, Q4=FY-9M
 │   │   ├── panel_quarterly.csv         # Bảng panel hợp nhất (is_msft, rd_intensity, capex_intensity)
-│   │   ├── ai_products.csv             # 40 sự kiện AI đã gán nhãn A/B/C kèm giải trình
+│   │   ├── ai_products.csv             # 94 sự kiện AI (2021-2026) đã gán nhãn A/B/C kèm giải trình
 │   │   ├── google_trends_quarterly.csv # Điểm xu hướng tìm kiếm gộp trung bình theo quý
 │   │   └── market_quarterly.csv        # Giá đóng cửa điều chỉnh TB & tổng volume theo quý
 │   └── sync_log.jsonl          # Nhật ký đồng bộ 16 trường (SRS §6.7)
@@ -173,7 +173,7 @@ uv run python -m aicor.pipeline.run
 ## 6. Lộ trình phát triển tiếp theo
 
 - [x] **Phase 1: Data Collection & Preprocessing** (Hoàn thành — 65/65 tests green, 5 GitHub Actions workflows live).
-  - Tầng raw bất biến (SEC facts XBRL, Market 1,255 bars, Trends 1,004 rows, IR 40 products).
+  - Tầng raw bất biến (SEC facts XBRL, Market 1,255 bars, Trends 1,004 rows, IR 94 products).
   - Tầng processed chuẩn hóa: 5 bảng CSV tại `data/processed/` (44 quý từ 2021-Q1 đến 2026-Q2).
   - Khắc phục triệt để logic cross-tag Q4 cho GOOGL: $Q_4 = FY - 9M$, cân đối $|Assets - (Liabilities + Equity)| = 0.0$.
   - Tự động hóa khép kín: Tự động crawl, tiền xử lý, kiểm tra chất lượng và commit/push trên GitHub Actions.

@@ -311,11 +311,42 @@ def save_ir_csv(
     return path
 
 
+def load_historical_milestones(company: str, settings=None) -> list[IrItem]:
+    """Load curated historical AI product milestones (2021-2026) from data/raw/ir/historical_milestones.csv."""
+    if settings is None:
+        settings = get_settings()
+
+    path = Path(settings.data_dir) / "raw" / "ir" / "historical_milestones.csv"
+    if not path.exists():
+        return []
+
+    try:
+        df = pd.read_csv(path)
+        co_df = df[df["company"] == company]
+        items: list[IrItem] = []
+        for _, row in co_df.iterrows():
+            items.append(
+                IrItem(
+                    product_name=str(row.get("product_name", "")),
+                    announcement_date=str(row.get("announcement_date", "")),
+                    description=str(row.get("description", "")),
+                    source_url=str(row.get("source_url", "")),
+                    category=row.get("category"),
+                    category_rationale=row.get("category_rationale"),
+                    review_status=str(row.get("review_status", "reviewed")),
+                )
+            )
+        return items
+    except Exception as e:
+        print(f"Warning: Failed to load historical milestones for {company}: {e}")
+        return []
+
+
 def main() -> None:
     settings = get_settings()
     rubric = load_rubric()
     for company, feeds in IR_FEEDS.items():
-        all_items: list[IrItem] = []
+        all_items: list[IrItem] = load_historical_milestones(company, settings=settings)
         for feed in feeds:
             try:
                 items = scrape_ir_blog(feed)
@@ -325,10 +356,12 @@ def main() -> None:
         deduped = dedup_ir_items(all_items)
         classified: list[IrItem] = []
         for item in deduped:
-            cat, rationale = classify_abc(item, rubric)
-            item.category = cat
-            item.category_rationale = rationale
+            if not item.category:
+                cat, rationale = classify_abc(item, rubric)
+                item.category = cat
+                item.category_rationale = rationale
             classified.append(item)
+        classified.sort(key=lambda x: str(x.announcement_date))
         if classified:
             save_ir_csv(classified, company, settings=settings)
             print(f"Saved {len(classified)} IR items for {company}")
