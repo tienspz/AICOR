@@ -30,6 +30,9 @@ jobs:
           SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
         run: uv run python -m aicor.sources.sec
 
+      - name: Run preprocessing pipeline
+        run: uv run python -m aicor.pipeline.run
+
       - name: Validate data gates
         run: uv run pytest -m "not live" -v
 

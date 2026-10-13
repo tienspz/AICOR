@@ -166,3 +166,145 @@ def run_pipeline(
     )
 
     return panel
+
+
+def load_raw_pipeline_data(settings=None) -> dict[str, pd.DataFrame]:
+    """Load all raw collected data into DataFrames for pipeline processing."""
+    if settings is None:
+        settings = get_settings()
+
+    data: dict[str, pd.DataFrame] = {}
+    data_dir = Path(settings.data_dir)
+
+    # 1. SEC facts
+    from aicor.preprocess.extract import load_and_extract_sec_snapshots
+
+    sec_data = load_and_extract_sec_snapshots(data_dir=data_dir)
+    data.update(sec_data)
+
+    # 2. Market CSVs
+    market_dir = data_dir / "raw" / "market"
+    for ticker in ("MSFT", "GOOGL"):
+        csv_file = market_dir / f"{ticker}.csv"
+        if csv_file.exists():
+            data[f"market_{ticker.lower()}"] = pd.read_csv(csv_file)
+
+    # 3. Trends CSV
+    trends_file = data_dir / "raw" / "trends" / "trends.csv"
+    if trends_file.exists():
+        data["trends"] = pd.read_csv(trends_file)
+
+    # 4. IR CSVs
+    ir_dir = data_dir / "raw" / "ir"
+    for ticker in ("MSFT", "GOOGL"):
+        csv_file = ir_dir / f"ir_{ticker.lower()}.csv"
+        if csv_file.exists():
+            data[f"ir_{ticker.lower()}"] = pd.read_csv(csv_file)
+
+    return data
+
+
+def run_full_pipeline(settings=None) -> dict[str, pd.DataFrame]:
+    """Execute the end-to-end pipeline on raw data and save preprocessed datasets to data/processed/."""
+    if settings is None:
+        settings = get_settings()
+
+    data_dir = Path(settings.data_dir)
+    proc_dir = data_dir / "processed"
+    proc_dir.mkdir(parents=True, exist_ok=True)
+
+    raw_data = load_raw_pipeline_data(settings)
+    panel = run_pipeline(raw_data, settings=settings)
+
+    outputs: dict[str, pd.DataFrame] = {}
+
+    # 1. Save panel_quarterly.csv
+    if not panel.empty:
+        if "rd_expense" in panel.columns and "revenue" in panel.columns:
+            panel["rd_intensity"] = panel["rd_expense"] / panel["revenue"]
+        if "capex" in panel.columns and "revenue" in panel.columns:
+            panel["capex_intensity"] = panel["capex"] / panel["revenue"]
+
+        panel_path = proc_dir / "panel_quarterly.csv"
+        panel.to_csv(panel_path, index=False)
+        outputs["panel_quarterly"] = panel
+
+    # 2. Save individual financial tables
+    fin_frames = []
+    for k in ("sec_msft", "sec_googl"):
+        if k in raw_data and not raw_data[k].empty:
+            df = clean_financial(raw_data[k])
+            df = mark_missing(df)
+            df = align_calendar(df)
+            df = normalize_units(df)
+            fin_frames.append(df)
+    if fin_frames:
+        fin_df = pd.concat(fin_frames, ignore_index=True)
+        fin_path = proc_dir / "financial_quarterly.csv"
+        fin_df.to_csv(fin_path, index=False)
+        outputs["financial_quarterly"] = fin_df
+
+    # 3. Save Trends quarterly
+    if "trends" in raw_data and not raw_data["trends"].empty:
+        tdf = raw_data["trends"].copy()
+        if "date" in tdf.columns:
+            tdf["date"] = pd.to_datetime(tdf["date"])
+            tdf["calendar_quarter"] = tdf["date"].dt.to_period("Q").astype(str)
+            q_trends = (
+                tdf.groupby(["calendar_quarter", "keyword"])["interest_score"]
+                .mean()
+                .reset_index()
+            )
+            q_trends_path = proc_dir / "google_trends_quarterly.csv"
+            q_trends.to_csv(q_trends_path, index=False)
+            outputs["google_trends_quarterly"] = q_trends
+
+    # 4. Save IR products
+    ir_frames = []
+    for ticker in ("MSFT", "GOOGL"):
+        k = f"ir_{ticker.lower()}"
+        if k in raw_data and not raw_data[k].empty:
+            idf = raw_data[k].copy()
+            idf["company"] = ticker
+            ir_frames.append(idf)
+    if ir_frames:
+        all_ir = pd.concat(ir_frames, ignore_index=True)
+        ir_path = proc_dir / "ai_products.csv"
+        all_ir.to_csv(ir_path, index=False)
+        outputs["ai_products"] = all_ir
+
+    # 5. Save Market quarterly
+    mkt_frames = []
+    for ticker in ("MSFT", "GOOGL"):
+        k = f"market_{ticker.lower()}"
+        if k in raw_data and not raw_data[k].empty:
+            mdf = raw_data[k].copy()
+            mdf["company"] = ticker
+            if "date" in mdf.columns:
+                mdf["date"] = pd.to_datetime(mdf["date"])
+                mdf["calendar_quarter"] = mdf["date"].dt.to_period("Q").astype(str)
+                agg = (
+                    mdf.groupby(["calendar_quarter", "company"])
+                    .agg({"adj_close": "mean", "volume": "sum"})
+                    .reset_index()
+                )
+                mkt_frames.append(agg)
+    if mkt_frames:
+        all_mkt = pd.concat(mkt_frames, ignore_index=True)
+        mkt_path = proc_dir / "market_quarterly.csv"
+        all_mkt.to_csv(mkt_path, index=False)
+        outputs["market_quarterly"] = all_mkt
+
+    return outputs
+
+
+def main() -> None:
+    print("Executing AICOR Preprocessing Pipeline on raw data...")
+    res = run_full_pipeline()
+    for name, df in res.items():
+        print(f"Generated data/processed/{name}.csv ({len(df)} rows)")
+    print("Preprocessing completed successfully!")
+
+
+if __name__ == "__main__":
+    main()

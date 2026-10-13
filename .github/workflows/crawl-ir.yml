@@ -28,6 +28,9 @@ jobs:
       - name: Run IR crawler
         run: uv run python -m aicor.sources.ir
 
+      - name: Run preprocessing pipeline
+        run: uv run python -m aicor.pipeline.run
+
       - name: Validate data gates
         run: uv run pytest -m "not live" -v
 
