@@ -28,6 +28,9 @@ jobs:
       - name: Run Market crawler
         run: uv run python -m aicor.sources.market
 
+      - name: Run preprocessing pipeline
+        run: uv run python -m aicor.pipeline.run
+
       - name: Validate data gates
         run: uv run pytest -m "not live" -v
 
