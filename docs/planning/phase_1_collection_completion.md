@@ -82,6 +82,6 @@ Giai đoạn Phase 1 đã hoàn thành toàn bộ mục tiêu theo Lecture 07 v�
 
 Cơ sở dữ liệu thô và toàn bộ bảng dữ liệu tiền xử lý chuẩn hóa đã hoàn tất và sẵn sàng. Giai đoạn tiếp theo (Phase 2) sẽ tập trung vào:
 1. Xây dựng module tính toán cốt lõi: `src/aicor/compute/engine.py`.
-2. Tính $In = z(R\&D)$ và $Out = w_1 \cdot z(\text{Product MA4Q}) + w_2 \cdot z(\text{Trends MA4Q})$.
+2. Tính $In = z(\text{RD})$ (R&D Expense) và $Out = w_1 \cdot z(\text{Product MA4Q}) + w_2 \cdot z(\text{Trends MA4Q})$.
 3. Tính $E = Out - In$ trên 3 kịch bản độ nhạy trọng số (Base 0.6/0.4, Equal 0.5/0.5, Tech 0.7/0.3).
 4. Xuất các bảng phân tích sẵn sàng cho Dashboard: `analysis_results.csv` và `features_quarterly.csv`.

@@ -178,7 +178,7 @@ uv run python -m aicor.pipeline.run
   - Khắc phục triệt để logic cross-tag Q4 cho GOOGL: $Q_4 = FY - 9M$, cân đối $|Assets - (Liabilities + Equity)| = 0.0$.
   - Tự động hóa khép kín: Tự động crawl, tiền xử lý, kiểm tra chất lượng và commit/push trên GitHub Actions.
 - [ ] **Phase 2: Metric Computation Engine ($In$, $Out$, $E$)**
-  - Tính toán $In = z(\text{R\&D})$ đối xứng cho 2 công ty.
+  - Tính toán $In = z(\text{RD})$ (với RD là chi phí R&D) đối xứng cho 2 công ty.
   - Tính toán $Out = w_1 \cdot z(\text{Product MA4Q}) + w_2 \cdot z(\text{Trends MA4Q})$ với 3 kịch bản trọng số độ nhạy ($0.6/0.4, 0.5/0.5, 0.7/0.3$).
   - Xử lý các case ngoại lệ: $std = 0 \to \text{degenerate}$, $< 4$ quý $\to \text{NULL}$.
   - Xuất bảng kết quả chuẩn hóa `analysis_results.csv` và `features_quarterly.csv`.
