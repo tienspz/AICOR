@@ -1,8 +1,22 @@
-"""Tests for IR crawler (Task 7)."""
+"""Tests for IR crawler (Task 7 & Research Blogs Tier A)."""
+
+from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 
-from aicor.sources.ir import IrItem, classify_abc, dedup_ir_items, load_rubric
+from aicor.config import Settings
+from aicor.sources.ir import (
+    GRES_FEED_URL,
+    IR_FEEDS,
+    MSR_FEED_URL,
+    IrItem,
+    _parse_date,
+    classify_abc,
+    dedup_ir_items,
+    load_rubric,
+    main as ir_main,
+)
 
 
 @pytest.fixture
@@ -61,3 +75,74 @@ def test_dedup_preserves_order():
     assert len(out) == 2
     assert out[0].product_name == "A"
     assert out[1].product_name == "B"
+
+
+def test_ir_feeds_include_research_blogs():
+    assert IR_FEEDS["MSFT"][-1] == MSR_FEED_URL
+    assert IR_FEEDS["GOOGL"][-1] == GRES_FEED_URL
+    assert len(IR_FEEDS["MSFT"]) == 3 and len(IR_FEEDS["GOOGL"]) == 3
+
+
+def test_research_paper_classifies_as_c():
+    item = IrItem(
+        "Efficient Transformers",
+        "2024-05-01",
+        "Research findings on attention efficiency",
+        "https://research.google/blog/efficient-transformers/",
+    )
+    assert classify_abc(item)[0] == "C"
+
+
+def test_dedup_same_story_different_blog():
+    items = [
+        IrItem("Gemini update", "2024-06-01", "d1", "https://blog.google/gemini-update/"),
+        IrItem("Gemini Update! ", "2024-06-01", "d2", "https://research.google/blog/gemini-update/"),
+    ]
+    assert len(dedup_ir_items(items)) == 1
+
+
+def test_parse_date_iso_and_rfc822():
+    assert _parse_date("2024-06-01T10:00:00Z") == _parse_date("Sat, 01 Jun 2024 10:00:00 GMT")
+    assert _parse_date("2024-06-01") == "2024-06-01"
+
+
+def test_feed_failure_isolates_per_feed(monkeypatch, tmp_path):
+    """NFR-04: If 1 feed fails, other feeds succeed and get saved."""
+    from aicor.sources import ir
+
+    test_settings = Settings(data_dir=str(tmp_path / "data"))
+
+    def mock_scrape(feed_url, settings=None):
+        if "azure" in feed_url:
+            raise ConnectionError("Simulated feed failure")
+        return [
+            IrItem(
+                product_name=f"Product from {feed_url}",
+                announcement_date="2024-06-01",
+                description="General announcement",
+                source_url=f"{feed_url}/item1",
+            )
+        ]
+
+    monkeypatch.setattr(ir, "get_settings", lambda: test_settings)
+    monkeypatch.setattr(ir, "scrape_ir_blog", mock_scrape)
+    monkeypatch.setattr(ir, "load_historical_milestones", lambda c, settings=None: [])
+
+    # Run main()
+    ir_main()
+
+    # Verify CSV files are saved for both MSFT and GOOGL despite Azure feed failure
+    msft_csv = tmp_path / "data" / "raw" / "ir" / "ir_msft.csv"
+    googl_csv = tmp_path / "data" / "raw" / "ir" / "ir_googl.csv"
+    assert msft_csv.exists()
+    assert googl_csv.exists()
+
+
+@pytest.mark.live
+def test_live_research_feeds_accessible():
+    import feedparser
+
+    f1 = feedparser.parse(GRES_FEED_URL)
+    assert len(f1.entries) > 0
+    f2 = feedparser.parse(MSR_FEED_URL)
+    assert len(f2.entries) > 0

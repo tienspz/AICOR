@@ -1,12 +1,14 @@
 """IR / Events crawler — products + events (RQ-02, Tier A).
 
-Implements: SPEC §6.3, §6.5 — blog scraping, A/B/C classification, dedup.
+Implements: SPEC §3.3, §6.3, §6.5 — blog scraping, A/B/C classification, dedup.
+ADR-0007: Google & Microsoft Research blogs as Tier A canonical sources.
 """
 
 from __future__ import annotations
 
 import hashlib
 import re
+import time
 from dataclasses import dataclass, field
 from datetime import date, datetime, timezone
 from pathlib import Path
@@ -14,6 +16,7 @@ from typing import Any, Literal
 from urllib.parse import urlparse, urlunparse
 
 import pandas as pd
+import requests
 import yaml
 
 from aicor.config import get_settings
@@ -24,17 +27,24 @@ from aicor.sources import (
     write_sync_log,
 )
 
-# Canonical IR and product blog feeds (SPEC §3.3)
+# Canonical IR and product blog feeds (SPEC §3.3, ADR-0007)
+MSR_FEED_URL = "https://www.microsoft.com/en-us/research/feed/"
+GRES_FEED_URL = "https://research.google/blog/rss/"
+
 IR_FEEDS: dict[str, list[str]] = {
     "MSFT": [
         "https://blogs.microsoft.com/feed/",
         "https://azure.microsoft.com/en-us/blog/feed/",
+        MSR_FEED_URL,
     ],
     "GOOGL": [
         "https://blog.google/rss/",
         "https://cloud.google.com/blog/rss/",
+        GRES_FEED_URL,
     ],
 }
+
+IR_REQUEST_DELAY_SECONDS: float = 2.0
 
 
 # ---------- Data classes ----------
@@ -126,6 +136,11 @@ def classify_abc(
 
     desc_lower = (item.description + " " + item.product_name).lower()
 
+    # Research paper override (§6.3, ADR-0007: research papers default to C)
+    if "paper" in desc_lower or "research findings" in desc_lower or "study" in desc_lower:
+        if not ("commercial" in desc_lower or "general availability" in desc_lower or "ga " in desc_lower):
+            return ("C", "Research publication or paper release")
+
     # Simple keyword heuristic (provisional)
     a_signals = ["launch", "ga ", "general availability", "generally available", "release"]
     b_signals = ["preview", "beta", "update", "upgrade", "expand", "rebrand"]
@@ -143,36 +158,75 @@ def classify_abc(
 
 # ---------- Dedup ----------
 
+def _norm_title(title: str) -> str:
+    """Normalize title for cross-channel dedup: lowercase and strip punctuation/extra spaces."""
+    t = title.lower().strip()
+    return re.sub(r"[^\w\s]", "", t).strip()
+
+
 def dedup_ir_items(items: list[IrItem]) -> list[IrItem]:
-    """Deduplicate IR items by normalized URL (§6.3: no counting duplicates)."""
-    seen: set[str] = set()
+    """Deduplicate IR items by normalized URL and title+date composite key (§6.3)."""
+    seen_urls: set[str] = set()
+    seen_title_dates: set[tuple[str, str]] = set()
     result: list[IrItem] = []
     for item in items:
-        key = item.normalized_url
-        if key not in seen:
-            seen.add(key)
-            result.append(item)
+        url_key = item.normalized_url
+        norm_title = _norm_title(item.product_name)
+        date_key = str(item.announcement_date) if item.announcement_date else ""
+
+        if url_key in seen_urls:
+            continue
+
+        if norm_title and date_key:
+            title_date_key = (norm_title, date_key)
+            if title_date_key in seen_title_dates:
+                continue
+            seen_title_dates.add(title_date_key)
+
+        seen_urls.add(url_key)
+        result.append(item)
     return result
 
 
-# ---------- Scraper (RSS / HTML) ----------
+# ---------- Polite Fetcher & Scraper (RSS / HTML) ----------
+
+def polite_fetch(url: str, *, settings=None) -> requests.Response:
+    """Fetch URL with polite rate limiting and configured User-Agent (NFR-07)."""
+    if settings is None:
+        settings = get_settings()
+
+    time.sleep(IR_REQUEST_DELAY_SECONDS)
+    headers = {
+        "User-Agent": settings.sec_user_agent,
+    }
+    resp = requests.get(url, headers=headers, timeout=30)
+    resp.raise_for_status()
+    return resp
+
 
 def scrape_ir_blog(
     feed_url: str,
     *,
+    settings=None,
     offline_fixture: bool = False,
 ) -> list[IrItem]:
     """Scrape an IR blog feed for product announcements.
 
-    Uses RSS/Atom parsing first, falls back to HTML scraping.
+    Uses RSS/Atom parsing with polite delay and User-Agent, falls back to HTML scraping.
     """
     if offline_fixture:
         return _fixture_ir_items()
 
-    import feedparser
-    import requests
+    if settings is None:
+        settings = get_settings()
 
-    feed = feedparser.parse(feed_url)
+    import feedparser
+
+    time.sleep(IR_REQUEST_DELAY_SECONDS)
+    feed = feedparser.parse(
+        feed_url,
+        request_headers={"User-Agent": settings.sec_user_agent},
+    )
 
     items: list[IrItem] = []
     for entry in feed.entries:
@@ -186,10 +240,9 @@ def scrape_ir_blog(
         )
 
     if not items:
-        # Fallback: try HTML scraping
+        # Fallback: try HTML scraping with polite_fetch
         try:
-            resp = requests.get(feed_url, timeout=30)
-            resp.raise_for_status()
+            resp = polite_fetch(feed_url, settings=settings)
             items = _scrape_html(resp.text, feed_url)
         except Exception:
             pass
@@ -198,16 +251,31 @@ def scrape_ir_blog(
 
 
 def _parse_date(date_str: str) -> str:
-    """Best-effort date parsing → ISO format string."""
+    """Best-effort date parsing → ISO format string (YYYY-MM-DD)."""
     if not date_str:
         return ""
+
+    # Try ISO-8601 (e.g. 2024-06-01T10:00:00Z)
+    try:
+        iso_str = date_str.replace("Z", "+00:00")
+        dt = datetime.fromisoformat(iso_str)
+        return dt.date().isoformat()
+    except Exception:
+        pass
+
+    # Try RFC822 / email format (e.g. Wed, 07 Oct 2026 20:19:57 +0000)
     try:
         from email.utils import parsedate_to_datetime
 
         dt = parsedate_to_datetime(date_str)
         return dt.date().isoformat()
     except Exception:
+        pass
+
+    if len(date_str) >= 10 and re.match(r"^\d{4}-\d{2}-\d{2}", date_str):
         return date_str[:10]
+
+    return date_str[:10]
 
 
 def _strip_html(html: str) -> str:
@@ -225,7 +293,8 @@ def _scrape_html(html: str, base_url: str) -> list[IrItem]:
     for article in soup.find_all(["article", "div"], class_=re.compile(r"post|entry|blog")):
         title_el = article.find(["h1", "h2", "h3", "a"])
         title = title_el.get_text(strip=True) if title_el else "Unknown"
-        link = title_el.get("href", base_url) if title_el and title_el.name == "a" else base_url
+        link_el = title_el if (title_el and title_el.name == "a") else (title_el.find("a") if title_el else article.find("a"))
+        link = link_el.get("href", base_url) if link_el else base_url
         desc_el = article.find("p")
         desc = desc_el.get_text(strip=True) if desc_el else ""
         items.append(
@@ -345,14 +414,51 @@ def load_historical_milestones(company: str, settings=None) -> list[IrItem]:
 def main() -> None:
     settings = get_settings()
     rubric = load_rubric()
+    raw_dir = Path(settings.data_dir) / "raw" / "ir"
+    raw_dir.mkdir(parents=True, exist_ok=True)
+
     for company, feeds in IR_FEEDS.items():
         all_items: list[IrItem] = load_historical_milestones(company, settings=settings)
         for feed in feeds:
+            started_at = datetime.now(timezone.utc).isoformat()
             try:
-                items = scrape_ir_blog(feed)
+                items = scrape_ir_blog(feed, settings=settings)
                 all_items.extend(items)
+                write_sync_log(
+                    SyncRecord(
+                        source_type="ir_blog",
+                        company=company,
+                        started_at=started_at,
+                        finished_at=datetime.now(timezone.utc).isoformat(),
+                        sync_status="success",
+                        records_fetched=len(items),
+                        records_new=len(items),
+                    ),
+                    log_dir=settings.data_dir,
+                )
+                append_manifest(
+                    raw_dir / "manifest.csv",
+                    filename=f"ir_{company.lower()}.csv",
+                    sha256="",
+                    source_url=feed,
+                    retrieved_at=started_at,
+                )
             except Exception as exc:
                 print(f"Error scraping {feed}: {exc}")
+                write_sync_log(
+                    SyncRecord(
+                        source_type="ir_blog",
+                        company=company,
+                        started_at=started_at,
+                        finished_at=datetime.now(timezone.utc).isoformat(),
+                        sync_status="failed",
+                        records_fetched=0,
+                        records_new=0,
+                        error_message=str(exc),
+                    ),
+                    log_dir=settings.data_dir,
+                )
+
         deduped = dedup_ir_items(all_items)
         classified: list[IrItem] = []
         for item in deduped:
