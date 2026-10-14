@@ -210,6 +210,8 @@ verification_status: verified
 | Alphabet — Investor Relations | `https://abc.xyz/investor/` | A |
 | Google — Blog | `https://blog.google/` | A |
 | Google Cloud — Blog | `https://cloud.google.com/blog` | A |
+| Google — Research Blog | `https://research.google/blog/` | A |
+| Microsoft — Research | `https://www.microsoft.com/en-us/research/` | A |
 | Google Trends | `https://trends.google.com/trends/` | B |
 | Yahoo Finance — MSFT | `https://finance.yahoo.com/quote/MSFT/history/` | B |
 | Yahoo Finance — GOOGL | `https://finance.yahoo.com/quote/GOOGL/history/` | B |

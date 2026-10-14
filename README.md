@@ -54,7 +54,7 @@ Các crawler hoạt động độc lập (NFR-04: một nguồn lỗi không là
 | **SEC EDGAR XBRL** | **Tier S** | `data.sec.gov/api/xbrl/companyfacts/` | `0 */6 * * *` (Mỗi 6 tiếng) | `REQUEST_DELAY = 0.1s` (≤ 10 req/s, NFR-07); khai báo User-Agent; Tag resolver linh hoạt theo kỳ |
 | **Market Data** | **Tier B** | Yahoo Finance (`yfinance`) | `0 13-20 * * 1-5` (Sau phiên giao dịch) | Giữ nguyên `adj_close` và `volume`, lưu CSV định kỳ (SRC-09) |
 | **Google Trends** | **Tier B** | Google Trends (`pytrends`) | `0 */12 * * *` (Mỗi 12 tiếng) | Circuit-breaker tự động fallback `TrendsUnavailable` (§7.4) |
-| **IR & Product Blogs** | **Tier A** | Microsoft & Google Official Blogs | `0 2 * * *` (Hằng ngày lúc 02:00 UTC) | Chuẩn hóa URL, dedup bài viết đa kênh, phân loại A/B/C theo rubric |
+| **IR & Product Blogs** | **Tier A** | Microsoft, Azure, MS Research, Google, Cloud & Research Blogs (6 feeds) | `0 2 * * *` (Hằng ngày lúc 02:00 UTC) | Chuẩn hóa URL, dedup bài viết đa kênh (title+date), polite delay 2.0s/feed, phân loại A/B/C theo rubric |
 
 ---
 
@@ -72,7 +72,7 @@ Các crawler hoạt động độc lập (NFR-04: một nguồn lỗi không là
 │   ├── processed/              # 5 tập dữ liệu tiền xử lý chuẩn hóa dạng bảng (Lecture 07)
 │   │   ├── financial_quarterly.csv     # Bảng tài chính 22 quý, chuẩn hóa triệu USD, Q4=FY-9M
 │   │   ├── panel_quarterly.csv         # Bảng panel hợp nhất (is_msft, rd_intensity, capex_intensity)
-│   │   ├── ai_products.csv             # 94 sự kiện AI (2021-2026) đã gán nhãn A/B/C kèm giải trình
+│   │   ├── ai_products.csv             # 204 sự kiện & công trình AI (2021-2026) đã gán nhãn A/B/C kèm giải trình
 │   │   ├── google_trends_quarterly.csv # Điểm xu hướng tìm kiếm gộp trung bình theo quý
 │   │   └── market_quarterly.csv        # Giá đóng cửa điều chỉnh TB & tổng volume theo quý
 │   └── sync_log.jsonl          # Nhật ký đồng bộ 16 trường (SRS §6.7)
@@ -101,7 +101,7 @@ Các crawler hoạt động độc lập (NFR-04: một nguồn lỗi không là
 │   └── pipeline/               # Điều phối pipeline 8 bước (SRS §9)
 │       ├── archive.py          # Ghi manifest SHA-256 và sync_log
 │       └── run.py              # run_pipeline & run_full_pipeline CLI
-├── tests/                      # Bộ kiểm thử tự động (65 tests)
+├── tests/                      # Bộ kiểm thử tự động (74 tests)
 │   ├── contract/               # Kiểm thử schema & bất biến dữ liệu
 │   ├── unit/                   # Kiểm thử logic tiền xử lý và rubric
 │   └── integration/            # Kiểm thử tích hợp crawler & pipeline E2E
@@ -166,14 +166,14 @@ uv run python -m aicor.pipeline.run
 - **NFR-03 (Quản lý phiên bản cấu hình):** Tham số rolling window, rubric trọng số nằm trong `docs/decisions/baseline.yaml` và `rubric/v1.yaml`.
 - **NFR-04 (Khả năng chịu lỗi):** Lỗi ở 1 nguồn (ví dụ Google Trends chặn IP) sẽ chuyển trạng thái sang `partial`, bảo toàn toàn bộ dữ liệu SEC/IR mà không bị rollback.
 - **NFR-06 (Bảo mật):** Không hardcode API key/secret. User-Agent lấy từ biến môi trường `SEC_USER_AGENT`.
-- **NFR-07 (Tuân thủ nguồn):** Tuân thủ giới hạn SEC `≤ 10 req/s` bằng bộ điều phối thời gian cố định.
+- **NFR-07 (Tuân thủ nguồn):** Tuân thủ giới hạn SEC `≤ 10 req/s` bằng bộ điều phối thời gian cố định; IR blogs áp dụng polite fetch (delay 2.0s/feed kèm khai báo User-Agent đầy đủ).
 
 ---
 
 ## 6. Lộ trình phát triển tiếp theo
 
-- [x] **Phase 1: Data Collection & Preprocessing** (Hoàn thành — 65/65 tests green, 5 GitHub Actions workflows live).
-  - Tầng raw bất biến (SEC facts XBRL, Market 1,255 bars, Trends 1,004 rows, IR 94 products).
+- [x] **Phase 1: Data Collection & Preprocessing** (Hoàn thành — 74/74 tests green, 5 GitHub Actions workflows live).
+  - Tầng raw bất biến (SEC facts XBRL, Market 1,255 bars, Trends 1,004 rows, IR 204 products).
   - Tầng processed chuẩn hóa: 5 bảng CSV tại `data/processed/` (44 quý từ 2021-Q1 đến 2026-Q2).
   - Khắc phục triệt để logic cross-tag Q4 cho GOOGL: $Q_4 = FY - 9M$, cân đối $|Assets - (Liabilities + Equity)| = 0.0$.
   - Tự động hóa khép kín: Tự động crawl, tiền xử lý, kiểm tra chất lượng và commit/push trên GitHub Actions.
