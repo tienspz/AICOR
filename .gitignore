@@ -5,6 +5,9 @@
 # (reproducibility), NFR-02 (traceability) and NFR-03 (config versioning).
 # ---------------------------------------------------------------------------
 
+# Documentation
+docs/
+
 # AI assistant configuration, skills, and vendored sources
 .agents/
 .opencode/
