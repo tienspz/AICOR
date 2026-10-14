@@ -1,6 +1,7 @@
 # AICOR — AI Investment & Corporate Outcome Research
 
-> **Tên đề tài học thuật (Chuẩn CMU):** *Phân tích Thực nghiệm Hiệu suất Đầu tư Trí tuệ Nhân tạo và Kết quả Doanh nghiệp: Nghiên cứu So sánh Đối chiếu Microsoft Corporation và Alphabet Inc. theo Quý từ năm 2022 đến nay*
+> **Đề tài:** *Phân tích hiệu suất đầu tư AI và kết quả của Microsoft, Alphabet theo quý từ 2022 đến nay*
+> *(Analysis of AI Investment Efficiency and Outcomes of Microsoft and Alphabet on a Quarterly Basis from 2022 to Present)*
 
 [![Validate](https://github.com/tienspz/AICOR/actions/workflows/validate.yml/badge.svg)](https://github.com/tienspz/AICOR/actions/workflows/validate.yml)
 [![Crawl SEC](https://github.com/tienspz/AICOR/actions/workflows/crawl-sec.yml/badge.svg)](https://github.com/tienspz/AICOR/actions/workflows/crawl-sec.yml)
