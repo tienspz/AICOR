@@ -1,5 +1,7 @@
 # AICOR — AI Investment & Corporate Outcome Research
 
+> **Tên đề tài học thuật (Chuẩn CMU):** *Nghiên cứu Thực nghiệm Đánh giá Hiệu quả Chuyển đổi Đầu vào – Đầu ra Trí tuệ Nhân tạo và Kết quả Đổi mới Doanh nghiệp: Nghiên cứu Trường hợp So sánh Đối chiếu giữa Microsoft Corporation và Alphabet Inc.*
+
 [![Validate](https://github.com/tienspz/AICOR/actions/workflows/validate.yml/badge.svg)](https://github.com/tienspz/AICOR/actions/workflows/validate.yml)
 [![Crawl SEC](https://github.com/tienspz/AICOR/actions/workflows/crawl-sec.yml/badge.svg)](https://github.com/tienspz/AICOR/actions/workflows/crawl-sec.yml)
 [![Crawl Market](https://github.com/tienspz/AICOR/actions/workflows/crawl-market.yml/badge.svg)](https://github.com/tienspz/AICOR/actions/workflows/crawl-market.yml)
