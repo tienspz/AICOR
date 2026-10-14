@@ -4,7 +4,9 @@
 | --- | --- |
 | Mã tài liệu | AICOR-SRS |
 | Trạng thái | Baseline — đã khóa phạm vi công ty, sẵn sàng triển khai crawler |
-| Hệ thống | AICOR — AI Input/Output Research |
+| Tên đề tài tiếng Việt (Chuẩn học thuật CMU) | **Nghiên cứu Thực nghiệm Đánh giá Hiệu quả Chuyển đổi Đầu vào – Đầu ra Trí tuệ Nhân tạo và Kết quả Đổi mới Doanh nghiệp: Nghiên cứu Trường hợp So sánh Đối chiếu giữa Microsoft Corporation và Alphabet Inc.** |
+| Tên đề tài tiếng Anh (CMU Format) | **AICOR: An Empirical Evaluation of Artificial Intelligence Input-Output Efficiency and Corporate Innovation Outcomes: A Comparative Case Study of Microsoft Corporation and Alphabet Inc.** |
+| Hệ thống | AICOR — AI Input/Output Research (AI Investment & Corporate Outcome Research) |
 | Đối tượng so sánh | Microsoft Corporation (MSFT) và Alphabet Inc. (GOOGL/GOOG) |
 | Đơn vị phân tích chính | Công ty × Quý (xem DAT-01 về căn chỉnh quý lịch) |
 | Khoảng dữ liệu chính | Q1/2022 đến quý gần nhất có dữ liệu hợp lệ (ước tính 16–20 quý) |
@@ -43,6 +45,10 @@ Tài liệu này hợp nhất hai bản SPEC trước đó của dự án, vốn
 ## 1. Giới thiệu
 
 ### 1.1 Mục đích
+
+> **Tên đề tài nghiên cứu chính thức (Chuẩn học thuật CMU / SEI Requirements Standard):**
+> - **Tiếng Việt:** *Nghiên cứu Thực nghiệm Đánh giá Hiệu quả Chuyển đổi Đầu vào – Đầu ra Trí tuệ Nhân tạo và Kết quả Đổi mới Doanh nghiệp: Nghiên cứu Trường hợp So sánh Đối chiếu giữa Microsoft Corporation và Alphabet Inc.*
+> - **Tiếng Anh:** *AICOR: An Empirical Evaluation of Artificial Intelligence Input-Output Efficiency and Corporate Innovation Outcomes: A Comparative Case Study of Microsoft Corporation and Alphabet Inc.*
 
 AICOR là hệ thống nghiên cứu theo quý, so sánh **mức đầu vào liên quan đến AI** (`In`) với **các chỉ báo đầu ra AI** (`Out`) của Microsoft và Alphabet. Kết quả là điểm tương đối `E = Out − In`, dùng để quan sát xu hướng trong lịch sử dữ liệu của từng công ty và kiểm tra độ nhạy khi thay đổi trọng số.
 
