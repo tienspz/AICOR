@@ -4,8 +4,9 @@
 | --- | --- |
 | Mã tài liệu | AICOR-SRS |
 | Trạng thái | Baseline — đã khóa phạm vi công ty, sẵn sàng triển khai crawler |
-| Tên đề tài tiếng Việt (Chuẩn học thuật CMU) | **Nghiên cứu Thực nghiệm Đánh giá Hiệu quả Chuyển đổi Đầu vào – Đầu ra Trí tuệ Nhân tạo và Kết quả Đổi mới Doanh nghiệp: Nghiên cứu Trường hợp So sánh Đối chiếu giữa Microsoft Corporation và Alphabet Inc.** |
-| Tên đề tài tiếng Anh (CMU Format) | **AICOR: An Empirical Evaluation of Artificial Intelligence Input-Output Efficiency and Corporate Innovation Outcomes: A Comparative Case Study of Microsoft Corporation and Alphabet Inc.** |
+| Tên đề tài gốc | Phân tích hiệu suất đầu tư AI và kết quả của Microsoft, Alphabet theo quý từ 2022 đến nay |
+| Tên đề tài tiếng Việt (Chuẩn học thuật CMU) | **Phân tích Thực nghiệm Hiệu suất Đầu tư Trí tuệ Nhân tạo và Kết quả Doanh nghiệp: Nghiên cứu So sánh Đối chiếu Microsoft Corporation và Alphabet Inc. theo Quý từ năm 2022 đến nay** |
+| Tên đề tài tiếng Anh (CMU Format) | **AICOR: An Empirical Analysis of Artificial Intelligence Investment Efficiency and Corporate Outcomes: A Comparative Study of Microsoft Corporation and Alphabet Inc. on a Quarterly Basis from 2022 to Present** |
 | Hệ thống | AICOR — AI Input/Output Research (AI Investment & Corporate Outcome Research) |
 | Đối tượng so sánh | Microsoft Corporation (MSFT) và Alphabet Inc. (GOOGL/GOOG) |
 | Đơn vị phân tích chính | Công ty × Quý (xem DAT-01 về căn chỉnh quý lịch) |
@@ -47,8 +48,9 @@ Tài liệu này hợp nhất hai bản SPEC trước đó của dự án, vốn
 ### 1.1 Mục đích
 
 > **Tên đề tài nghiên cứu chính thức (Chuẩn học thuật CMU / SEI Requirements Standard):**
-> - **Tiếng Việt:** *Nghiên cứu Thực nghiệm Đánh giá Hiệu quả Chuyển đổi Đầu vào – Đầu ra Trí tuệ Nhân tạo và Kết quả Đổi mới Doanh nghiệp: Nghiên cứu Trường hợp So sánh Đối chiếu giữa Microsoft Corporation và Alphabet Inc.*
-> - **Tiếng Anh:** *AICOR: An Empirical Evaluation of Artificial Intelligence Input-Output Efficiency and Corporate Innovation Outcomes: A Comparative Case Study of Microsoft Corporation and Alphabet Inc.*
+> - **Tên gốc đề xuất:** *Phân tích hiệu suất đầu tư AI và kết quả của Microsoft, Alphabet theo quý từ 2022 đến nay*
+> - **Tiếng Việt (Định hình chuẩn CMU):** *Phân tích Thực nghiệm Hiệu suất Đầu tư Trí tuệ Nhân tạo và Kết quả Doanh nghiệp: Nghiên cứu So sánh Đối chiếu Microsoft Corporation và Alphabet Inc. theo Quý từ năm 2022 đến nay*
+> - **Tiếng Anh (CMU Research Format):** *AICOR: An Empirical Analysis of Artificial Intelligence Investment Efficiency and Corporate Outcomes: A Comparative Study of Microsoft Corporation and Alphabet Inc. on a Quarterly Basis from 2022 to Present*
 
 AICOR là hệ thống nghiên cứu theo quý, so sánh **mức đầu vào liên quan đến AI** (`In`) với **các chỉ báo đầu ra AI** (`Out`) của Microsoft và Alphabet. Kết quả là điểm tương đối `E = Out − In`, dùng để quan sát xu hướng trong lịch sử dữ liệu của từng công ty và kiểm tra độ nhạy khi thay đổi trọng số.
 
