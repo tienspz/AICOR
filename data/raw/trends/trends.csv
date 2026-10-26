@@ -180,7 +180,7 @@ date,keyword,interest_score
 2025-05-25,Microsoft AI,2
 2025-06-01,Microsoft AI,2
 2025-06-08,Microsoft AI,3
-2025-06-15,Microsoft AI,2
+2025-06-15,Microsoft AI,3
 2025-06-22,Microsoft AI,3
 2025-06-29,Microsoft AI,3
 2025-07-06,Microsoft AI,3
@@ -195,9 +195,9 @@ date,keyword,interest_score
 2025-09-07,Microsoft AI,2
 2025-09-14,Microsoft AI,3
 2025-09-21,Microsoft AI,4
-2025-09-28,Microsoft AI,3
+2025-09-28,Microsoft AI,4
 2025-10-05,Microsoft AI,3
-2025-10-12,Microsoft AI,3
+2025-10-12,Microsoft AI,2
 2025-10-19,Microsoft AI,3
 2025-10-26,Microsoft AI,4
 2025-11-02,Microsoft AI,6
@@ -205,35 +205,35 @@ date,keyword,interest_score
 2025-11-16,Microsoft AI,5
 2025-11-23,Microsoft AI,4
 2025-11-30,Microsoft AI,5
-2025-12-07,Microsoft AI,6
-2025-12-14,Microsoft AI,4
+2025-12-07,Microsoft AI,5
+2025-12-14,Microsoft AI,5
 2025-12-21,Microsoft AI,3
 2025-12-28,Microsoft AI,3
 2026-01-04,Microsoft AI,4
 2026-01-11,Microsoft AI,4
-2026-01-18,Microsoft AI,4
-2026-01-25,Microsoft AI,5
+2026-01-18,Microsoft AI,5
+2026-01-25,Microsoft AI,6
 2026-02-01,Microsoft AI,5
 2026-02-08,Microsoft AI,5
-2026-02-15,Microsoft AI,5
-2026-02-22,Microsoft AI,6
+2026-02-15,Microsoft AI,6
+2026-02-22,Microsoft AI,7
 2026-03-01,Microsoft AI,8
-2026-03-08,Microsoft AI,7
+2026-03-08,Microsoft AI,8
 2026-03-15,Microsoft AI,8
-2026-03-22,Microsoft AI,7
+2026-03-22,Microsoft AI,8
 2026-03-29,Microsoft AI,7
 2026-04-05,Microsoft AI,7
 2026-04-12,Microsoft AI,8
-2026-04-19,Microsoft AI,7
+2026-04-19,Microsoft AI,8
 2026-04-26,Microsoft AI,7
-2026-05-03,Microsoft AI,6
+2026-05-03,Microsoft AI,7
 2026-05-10,Microsoft AI,7
 2026-05-17,Microsoft AI,9
-2026-05-24,Microsoft AI,10
-2026-05-31,Microsoft AI,11
+2026-05-24,Microsoft AI,11
+2026-05-31,Microsoft AI,12
 2026-06-07,Microsoft AI,11
 2026-06-14,Microsoft AI,8
-2026-06-21,Microsoft AI,8
+2026-06-21,Microsoft AI,9
 2026-06-28,Microsoft AI,10
 2026-07-05,Microsoft AI,9
 2026-07-12,Microsoft AI,4
@@ -411,13 +411,13 @@ date,keyword,interest_score
 2025-01-05,Azure AI,0
 2025-01-12,Azure AI,0
 2025-01-19,Azure AI,0
-2025-01-26,Azure AI,0
+2025-01-26,Azure AI,1
 2025-02-02,Azure AI,0
 2025-02-09,Azure AI,0
 2025-02-16,Azure AI,1
 2025-02-23,Azure AI,0
 2025-03-02,Azure AI,0
-2025-03-09,Azure AI,0
+2025-03-09,Azure AI,1
 2025-03-16,Azure AI,0
 2025-03-23,Azure AI,0
 2025-03-30,Azure AI,0
@@ -468,9 +468,9 @@ date,keyword,interest_score
 2026-02-08,Azure AI,2
 2026-02-15,Azure AI,2
 2026-02-22,Azure AI,2
-2026-03-01,Azure AI,2
+2026-03-01,Azure AI,3
 2026-03-08,Azure AI,2
-2026-03-15,Azure AI,2
+2026-03-15,Azure AI,3
 2026-03-22,Azure AI,2
 2026-03-29,Azure AI,2
 2026-04-05,Azure AI,2
@@ -491,7 +491,7 @@ date,keyword,interest_score
 2026-07-19,Azure AI,1
 2026-07-26,Azure AI,1
 2026-08-02,Azure AI,1
-2026-08-09,Azure AI,0
+2026-08-09,Azure AI,1
 2026-08-16,Azure AI,0
 2026-08-23,Azure AI,0
 2026-08-30,Azure AI,0
@@ -566,13 +566,13 @@ date,keyword,interest_score
 2023-03-05,Google AI,2
 2023-03-12,Google AI,2
 2023-03-19,Google AI,3
-2023-03-26,Google AI,2
+2023-03-26,Google AI,3
 2023-04-02,Google AI,2
 2023-04-09,Google AI,2
-2023-04-16,Google AI,4
+2023-04-16,Google AI,5
 2023-04-23,Google AI,3
 2023-04-30,Google AI,4
-2023-05-07,Google AI,4
+2023-05-07,Google AI,5
 2023-05-14,Google AI,5
 2023-05-21,Google AI,4
 2023-05-28,Google AI,3
@@ -583,11 +583,11 @@ date,keyword,interest_score
 2023-07-02,Google AI,2
 2023-07-09,Google AI,3
 2023-07-16,Google AI,3
-2023-07-23,Google AI,3
+2023-07-23,Google AI,2
 2023-07-30,Google AI,2
 2023-08-06,Google AI,2
 2023-08-13,Google AI,2
-2023-08-20,Google AI,2
+2023-08-20,Google AI,3
 2023-08-27,Google AI,3
 2023-09-03,Google AI,3
 2023-09-10,Google AI,3
@@ -599,8 +599,8 @@ date,keyword,interest_score
 2023-10-22,Google AI,3
 2023-10-29,Google AI,3
 2023-11-05,Google AI,3
-2023-11-12,Google AI,4
-2023-11-19,Google AI,2
+2023-11-12,Google AI,3
+2023-11-19,Google AI,3
 2023-11-26,Google AI,3
 2023-12-03,Google AI,5
 2023-12-10,Google AI,5
@@ -610,7 +610,7 @@ date,keyword,interest_score
 2024-01-07,Google AI,3
 2024-01-14,Google AI,3
 2024-01-21,Google AI,3
-2024-01-28,Google AI,3
+2024-01-28,Google AI,4
 2024-02-04,Google AI,4
 2024-02-11,Google AI,5
 2024-02-18,Google AI,7
@@ -621,14 +621,14 @@ date,keyword,interest_score
 2024-03-24,Google AI,4
 2024-03-31,Google AI,4
 2024-04-07,Google AI,5
-2024-04-14,Google AI,5
+2024-04-14,Google AI,4
 2024-04-21,Google AI,5
-2024-04-28,Google AI,5
+2024-04-28,Google AI,4
 2024-05-05,Google AI,4
 2024-05-12,Google AI,7
 2024-05-19,Google AI,8
-2024-05-26,Google AI,7
-2024-06-02,Google AI,5
+2024-05-26,Google AI,8
+2024-06-02,Google AI,6
 2024-06-09,Google AI,5
 2024-06-16,Google AI,4
 2024-06-23,Google AI,4
@@ -642,16 +642,16 @@ date,keyword,interest_score
 2024-08-18,Google AI,5
 2024-08-25,Google AI,5
 2024-09-01,Google AI,5
-2024-09-08,Google AI,5
+2024-09-08,Google AI,6
 2024-09-15,Google AI,6
 2024-09-22,Google AI,6
 2024-09-29,Google AI,6
 2024-10-06,Google AI,6
 2024-10-13,Google AI,6
 2024-10-20,Google AI,6
-2024-10-27,Google AI,7
+2024-10-27,Google AI,6
 2024-11-03,Google AI,6
-2024-11-10,Google AI,7
+2024-11-10,Google AI,6
 2024-11-17,Google AI,7
 2024-11-24,Google AI,5
 2024-12-01,Google AI,7
@@ -662,32 +662,32 @@ date,keyword,interest_score
 2025-01-05,Google AI,6
 2025-01-12,Google AI,7
 2025-01-19,Google AI,7
-2025-01-26,Google AI,8
+2025-01-26,Google AI,9
 2025-02-02,Google AI,8
 2025-02-09,Google AI,8
 2025-02-16,Google AI,8
 2025-02-23,Google AI,9
-2025-03-02,Google AI,7
+2025-03-02,Google AI,8
 2025-03-09,Google AI,8
 2025-03-16,Google AI,8
-2025-03-23,Google AI,8
-2025-03-30,Google AI,8
+2025-03-23,Google AI,9
+2025-03-30,Google AI,9
 2025-04-06,Google AI,9
-2025-04-13,Google AI,8
+2025-04-13,Google AI,9
 2025-04-20,Google AI,9
 2025-04-27,Google AI,9
 2025-05-04,Google AI,9
 2025-05-11,Google AI,9
 2025-05-18,Google AI,12
 2025-05-25,Google AI,13
-2025-06-01,Google AI,11
+2025-06-01,Google AI,12
 2025-06-08,Google AI,14
 2025-06-15,Google AI,13
 2025-06-22,Google AI,13
 2025-06-29,Google AI,16
 2025-07-06,Google AI,12
 2025-07-13,Google AI,13
-2025-07-20,Google AI,14
+2025-07-20,Google AI,15
 2025-07-27,Google AI,16
 2025-08-03,Google AI,14
 2025-08-10,Google AI,14
@@ -695,61 +695,61 @@ date,keyword,interest_score
 2025-08-24,Google AI,15
 2025-08-31,Google AI,16
 2025-09-07,Google AI,15
-2025-09-14,Google AI,20
-2025-09-21,Google AI,22
+2025-09-14,Google AI,21
+2025-09-21,Google AI,21
 2025-09-28,Google AI,23
-2025-10-05,Google AI,20
+2025-10-05,Google AI,21
 2025-10-12,Google AI,18
-2025-10-19,Google AI,19
+2025-10-19,Google AI,20
 2025-10-26,Google AI,21
-2025-11-02,Google AI,22
+2025-11-02,Google AI,24
 2025-11-09,Google AI,23
 2025-11-16,Google AI,25
-2025-11-23,Google AI,22
-2025-11-30,Google AI,26
-2025-12-07,Google AI,25
+2025-11-23,Google AI,23
+2025-11-30,Google AI,27
+2025-12-07,Google AI,27
 2025-12-14,Google AI,23
 2025-12-21,Google AI,18
 2025-12-28,Google AI,17
 2026-01-04,Google AI,21
-2026-01-11,Google AI,22
-2026-01-18,Google AI,21
-2026-01-25,Google AI,23
-2026-02-01,Google AI,24
+2026-01-11,Google AI,23
+2026-01-18,Google AI,23
+2026-01-25,Google AI,24
+2026-02-01,Google AI,25
 2026-02-08,Google AI,24
-2026-02-15,Google AI,25
-2026-02-22,Google AI,28
+2026-02-15,Google AI,24
+2026-02-22,Google AI,29
 2026-03-01,Google AI,33
 2026-03-08,Google AI,30
 2026-03-15,Google AI,29
-2026-03-22,Google AI,29
+2026-03-22,Google AI,30
 2026-03-29,Google AI,28
 2026-04-05,Google AI,29
 2026-04-12,Google AI,32
-2026-04-19,Google AI,29
+2026-04-19,Google AI,30
 2026-04-26,Google AI,29
-2026-05-03,Google AI,29
-2026-05-10,Google AI,30
-2026-05-17,Google AI,33
-2026-05-24,Google AI,33
-2026-05-31,Google AI,30
-2026-06-07,Google AI,33
-2026-06-14,Google AI,27
-2026-06-21,Google AI,29
-2026-06-28,Google AI,30
-2026-07-05,Google AI,29
+2026-05-03,Google AI,28
+2026-05-10,Google AI,32
+2026-05-17,Google AI,34
+2026-05-24,Google AI,35
+2026-05-31,Google AI,32
+2026-06-07,Google AI,34
+2026-06-14,Google AI,29
+2026-06-21,Google AI,30
+2026-06-28,Google AI,31
+2026-07-05,Google AI,28
 2026-07-12,Google AI,21
 2026-07-19,Google AI,20
 2026-07-26,Google AI,18
 2026-08-02,Google AI,17
-2026-08-09,Google AI,17
+2026-08-09,Google AI,18
 2026-08-16,Google AI,18
-2026-08-23,Google AI,18
+2026-08-23,Google AI,19
 2026-08-30,Google AI,20
 2026-09-06,Google AI,19
 2026-09-13,Google AI,21
-2026-09-20,Google AI,20
-2026-09-27,Google AI,20
+2026-09-20,Google AI,21
+2026-09-27,Google AI,21
 2026-10-04,Google AI,21
 2026-10-11,Google AI,19
 2021-12-26,Gemini,12
@@ -761,8 +761,8 @@ date,keyword,interest_score
 2022-02-06,Gemini,12
 2022-02-13,Gemini,11
 2022-02-20,Gemini,12
-2022-02-27,Gemini,11
-2022-03-06,Gemini,10
+2022-02-27,Gemini,12
+2022-03-06,Gemini,11
 2022-03-13,Gemini,11
 2022-03-20,Gemini,11
 2022-03-27,Gemini,12
@@ -772,24 +772,24 @@ date,keyword,interest_score
 2022-04-24,Gemini,12
 2022-05-01,Gemini,11
 2022-05-08,Gemini,12
-2022-05-15,Gemini,15
+2022-05-15,Gemini,17
 2022-05-22,Gemini,15
-2022-05-29,Gemini,14
-2022-06-05,Gemini,13
+2022-05-29,Gemini,15
+2022-06-05,Gemini,12
 2022-06-12,Gemini,13
 2022-06-19,Gemini,12
 2022-06-26,Gemini,10
-2022-07-03,Gemini,10
+2022-07-03,Gemini,11
 2022-07-10,Gemini,11
 2022-07-17,Gemini,10
-2022-07-24,Gemini,10
+2022-07-24,Gemini,11
 2022-07-31,Gemini,10
 2022-08-07,Gemini,10
 2022-08-14,Gemini,10
 2022-08-21,Gemini,10
 2022-08-28,Gemini,9
 2022-09-04,Gemini,9
-2022-09-11,Gemini,8
+2022-09-11,Gemini,9
 2022-09-18,Gemini,9
 2022-09-25,Gemini,9
 2022-10-02,Gemini,10
@@ -799,38 +799,38 @@ date,keyword,interest_score
 2022-10-30,Gemini,9
 2022-11-06,Gemini,9
 2022-11-13,Gemini,10
-2022-11-20,Gemini,9
+2022-11-20,Gemini,10
 2022-11-27,Gemini,9
-2022-12-04,Gemini,10
+2022-12-04,Gemini,11
 2022-12-11,Gemini,9
 2022-12-18,Gemini,10
 2022-12-25,Gemini,10
 2023-01-01,Gemini,10
 2023-01-08,Gemini,10
 2023-01-15,Gemini,10
-2023-01-22,Gemini,9
+2023-01-22,Gemini,10
 2023-01-29,Gemini,10
-2023-02-05,Gemini,9
+2023-02-05,Gemini,10
 2023-02-12,Gemini,9
-2023-02-19,Gemini,9
+2023-02-19,Gemini,10
 2023-02-26,Gemini,10
 2023-03-05,Gemini,10
 2023-03-12,Gemini,9
-2023-03-19,Gemini,9
+2023-03-19,Gemini,10
 2023-03-26,Gemini,9
 2023-04-02,Gemini,9
-2023-04-09,Gemini,9
+2023-04-09,Gemini,10
 2023-04-16,Gemini,9
 2023-04-23,Gemini,10
-2023-04-30,Gemini,9
+2023-04-30,Gemini,10
 2023-05-07,Gemini,10
-2023-05-14,Gemini,11
+2023-05-14,Gemini,12
 2023-05-21,Gemini,14
 2023-05-28,Gemini,12
 2023-06-04,Gemini,11
 2023-06-11,Gemini,12
 2023-06-18,Gemini,11
-2023-06-25,Gemini,10
+2023-06-25,Gemini,9
 2023-07-02,Gemini,9
 2023-07-09,Gemini,8
 2023-07-16,Gemini,9
@@ -848,7 +848,7 @@ date,keyword,interest_score
 2023-10-08,Gemini,9
 2023-10-15,Gemini,8
 2023-10-22,Gemini,8
-2023-10-29,Gemini,7
+2023-10-29,Gemini,8
 2023-11-05,Gemini,8
 2023-11-12,Gemini,8
 2023-11-19,Gemini,8
@@ -861,25 +861,25 @@ date,keyword,interest_score
 2024-01-07,Gemini,9
 2024-01-14,Gemini,8
 2024-01-21,Gemini,9
-2024-01-28,Gemini,9
+2024-01-28,Gemini,8
 2024-02-04,Gemini,13
-2024-02-11,Gemini,16
-2024-02-18,Gemini,22
+2024-02-11,Gemini,17
+2024-02-18,Gemini,23
 2024-02-25,Gemini,21
-2024-03-03,Gemini,16
+2024-03-03,Gemini,17
 2024-03-10,Gemini,15
-2024-03-17,Gemini,20
+2024-03-17,Gemini,21
 2024-03-24,Gemini,15
-2024-03-31,Gemini,15
+2024-03-31,Gemini,14
 2024-04-07,Gemini,15
-2024-04-14,Gemini,15
-2024-04-21,Gemini,15
-2024-04-28,Gemini,14
+2024-04-14,Gemini,14
+2024-04-21,Gemini,14
+2024-04-28,Gemini,15
 2024-05-05,Gemini,15
 2024-05-12,Gemini,18
-2024-05-19,Gemini,20
+2024-05-19,Gemini,21
 2024-05-26,Gemini,18
-2024-06-02,Gemini,17
+2024-06-02,Gemini,19
 2024-06-09,Gemini,17
 2024-06-16,Gemini,17
 2024-06-23,Gemini,15
@@ -888,25 +888,25 @@ date,keyword,interest_score
 2024-07-14,Gemini,14
 2024-07-21,Gemini,14
 2024-07-28,Gemini,16
-2024-08-04,Gemini,16
+2024-08-04,Gemini,15
 2024-08-11,Gemini,16
-2024-08-18,Gemini,16
-2024-08-25,Gemini,15
+2024-08-18,Gemini,17
+2024-08-25,Gemini,16
 2024-09-01,Gemini,16
 2024-09-08,Gemini,17
-2024-09-15,Gemini,18
+2024-09-15,Gemini,17
 2024-09-22,Gemini,17
 2024-09-29,Gemini,16
 2024-10-06,Gemini,16
-2024-10-13,Gemini,15
+2024-10-13,Gemini,16
 2024-10-20,Gemini,16
 2024-10-27,Gemini,16
 2024-11-03,Gemini,15
 2024-11-10,Gemini,16
 2024-11-17,Gemini,19
 2024-11-24,Gemini,17
-2024-12-01,Gemini,18
-2024-12-08,Gemini,22
+2024-12-01,Gemini,19
+2024-12-08,Gemini,23
 2024-12-15,Gemini,20
 2024-12-22,Gemini,16
 2024-12-29,Gemini,16
@@ -914,92 +914,92 @@ date,keyword,interest_score
 2025-01-12,Gemini,19
 2025-01-19,Gemini,20
 2025-01-26,Gemini,22
-2025-02-02,Gemini,22
+2025-02-02,Gemini,23
 2025-02-09,Gemini,23
-2025-02-16,Gemini,22
-2025-02-23,Gemini,23
+2025-02-16,Gemini,23
+2025-02-23,Gemini,22
 2025-03-02,Gemini,22
-2025-03-09,Gemini,22
+2025-03-09,Gemini,23
 2025-03-16,Gemini,24
-2025-03-23,Gemini,25
+2025-03-23,Gemini,26
 2025-03-30,Gemini,27
 2025-04-06,Gemini,27
 2025-04-13,Gemini,27
 2025-04-20,Gemini,28
 2025-04-27,Gemini,29
-2025-05-04,Gemini,30
-2025-05-11,Gemini,29
-2025-05-18,Gemini,36
+2025-05-04,Gemini,31
+2025-05-11,Gemini,30
+2025-05-18,Gemini,35
 2025-05-25,Gemini,33
 2025-06-01,Gemini,34
 2025-06-08,Gemini,35
 2025-06-15,Gemini,32
 2025-06-22,Gemini,33
 2025-06-29,Gemini,31
-2025-07-06,Gemini,33
-2025-07-13,Gemini,34
+2025-07-06,Gemini,34
+2025-07-13,Gemini,35
 2025-07-20,Gemini,36
-2025-07-27,Gemini,33
+2025-07-27,Gemini,34
 2025-08-03,Gemini,34
-2025-08-10,Gemini,34
-2025-08-17,Gemini,34
+2025-08-10,Gemini,35
+2025-08-17,Gemini,35
 2025-08-24,Gemini,38
 2025-08-31,Gemini,41
-2025-09-07,Gemini,58
-2025-09-14,Gemini,73
-2025-09-21,Gemini,73
-2025-09-28,Gemini,71
-2025-10-05,Gemini,62
-2025-10-12,Gemini,54
-2025-10-19,Gemini,58
-2025-10-26,Gemini,54
-2025-11-02,Gemini,56
-2025-11-09,Gemini,57
-2025-11-16,Gemini,71
-2025-11-23,Gemini,59
-2025-11-30,Gemini,74
-2025-12-07,Gemini,73
+2025-09-07,Gemini,57
+2025-09-14,Gemini,79
+2025-09-21,Gemini,74
+2025-09-28,Gemini,72
+2025-10-05,Gemini,61
+2025-10-12,Gemini,56
+2025-10-19,Gemini,59
+2025-10-26,Gemini,56
+2025-11-02,Gemini,58
+2025-11-09,Gemini,59
+2025-11-16,Gemini,73
+2025-11-23,Gemini,61
+2025-11-30,Gemini,73
+2025-12-07,Gemini,78
 2025-12-14,Gemini,66
-2025-12-21,Gemini,56
+2025-12-21,Gemini,57
 2025-12-28,Gemini,56
-2026-01-04,Gemini,67
-2026-01-11,Gemini,68
-2026-01-18,Gemini,69
+2026-01-04,Gemini,68
+2026-01-11,Gemini,72
+2026-01-18,Gemini,70
 2026-01-25,Gemini,76
-2026-02-01,Gemini,81
+2026-02-01,Gemini,78
 2026-02-08,Gemini,75
-2026-02-15,Gemini,77
-2026-02-22,Gemini,83
-2026-03-01,Gemini,92
-2026-03-08,Gemini,94
-2026-03-15,Gemini,83
-2026-03-22,Gemini,91
-2026-03-29,Gemini,92
+2026-02-15,Gemini,78
+2026-02-22,Gemini,85
+2026-03-01,Gemini,97
+2026-03-08,Gemini,88
+2026-03-15,Gemini,85
+2026-03-22,Gemini,93
+2026-03-29,Gemini,90
 2026-04-05,Gemini,89
 2026-04-12,Gemini,100
-2026-04-19,Gemini,100
-2026-04-26,Gemini,95
-2026-05-03,Gemini,91
-2026-05-10,Gemini,89
-2026-05-17,Gemini,95
+2026-04-19,Gemini,96
+2026-04-26,Gemini,93
+2026-05-03,Gemini,88
+2026-05-10,Gemini,91
+2026-05-17,Gemini,93
 2026-05-24,Gemini,87
-2026-05-31,Gemini,88
-2026-06-07,Gemini,87
-2026-06-14,Gemini,78
+2026-05-31,Gemini,84
+2026-06-07,Gemini,88
+2026-06-14,Gemini,82
 2026-06-21,Gemini,75
-2026-06-28,Gemini,72
-2026-07-05,Gemini,72
-2026-07-12,Gemini,68
+2026-06-28,Gemini,73
+2026-07-05,Gemini,71
+2026-07-12,Gemini,67
 2026-07-19,Gemini,71
-2026-07-26,Gemini,69
-2026-08-02,Gemini,69
-2026-08-09,Gemini,70
-2026-08-16,Gemini,77
-2026-08-23,Gemini,82
-2026-08-30,Gemini,91
-2026-09-06,Gemini,89
-2026-09-13,Gemini,93
+2026-07-26,Gemini,70
+2026-08-02,Gemini,70
+2026-08-09,Gemini,72
+2026-08-16,Gemini,76
+2026-08-23,Gemini,84
+2026-08-30,Gemini,90
+2026-09-06,Gemini,93
+2026-09-13,Gemini,94
 2026-09-20,Gemini,93
-2026-09-27,Gemini,94
-2026-10-04,Gemini,95
-2026-10-11,Gemini,91
+2026-09-27,Gemini,96
+2026-10-04,Gemini,97
+2026-10-11,Gemini,92
