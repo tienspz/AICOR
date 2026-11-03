@@ -3,8 +3,9 @@
 > **Tên hệ thống:** Hệ thống Nghiên cứu Đầu vào – Đầu ra AI, viết tắt **ĐV-ĐR** (AI Input–Output Research System).
 > **Định danh kỹ thuật giữ nguyên:** Python package, `config_version` (`aicor-analysis-v1`), `model_id`, User-Agent `AICOR-research/1.0`, biến `AICOR_DATA_DIR` và đường dẫn repo GitHub vẫn dùng slug `aicor` để các artifact đã publish còn tái lập và kiểm tra được checksum.
 
-> **Đề tài:** *Phân tích hiệu suất đầu tư AI và kết quả của Microsoft, Alphabet theo quý từ 2022 đến nay*
-> *(Analysis of AI Investment Efficiency and Outcomes of Microsoft and Alphabet on a Quarterly Basis from 2022 to Present)*
+> **Đề tài:** *Đối chiếu đầu tư R&D với tín hiệu kết quả AI*
+> *Microsoft và Alphabet · Theo quý từ 2022*
+> *(Comparing R&D Investment with AI Outcome Signals at Microsoft and Alphabet: A Quarterly Analysis since 2022)*
 
 [![Validate](https://github.com/tienspz/AICOR/actions/workflows/validate.yml/badge.svg)](https://github.com/tienspz/AICOR/actions/workflows/validate.yml)
 [![Crawl SEC](https://github.com/tienspz/AICOR/actions/workflows/crawl-sec.yml/badge.svg)](https://github.com/tienspz/AICOR/actions/workflows/crawl-sec.yml)

@@ -4,8 +4,9 @@
 | --- | --- |
 | Mã tài liệu | ĐV-ĐR-SRS |
 | Trạng thái | Baseline — đã khóa phạm vi công ty; bổ sung lớp nowcast/forecast có kiểm soát (Phase 2.5) |
-| Tên đề tài | **Phân tích hiệu suất đầu tư AI và kết quả của Microsoft, Alphabet theo quý từ 2022 đến nay** |
-| Tên tiếng Anh | **Analysis of AI Investment Efficiency and Outcomes of Microsoft and Alphabet on a Quarterly Basis from 2022 to Present** (ĐV-ĐR) |
+| Tên đề tài | **Đối chiếu đầu tư R&D với tín hiệu kết quả AI** |
+| Phạm vi | Microsoft và Alphabet · Theo quý từ 2022 |
+| Tên tiếng Anh | **Comparing R&D Investment with AI Outcome Signals at Microsoft and Alphabet: A Quarterly Analysis since 2022** (ĐV-ĐR) |
 | Hệ thống | **ĐV-ĐR** — Hệ thống Nghiên cứu Đầu vào – Đầu ra AI (AI Input–Output Research System) |
 | Đối tượng so sánh | Microsoft Corporation (MSFT) và Alphabet Inc. (GOOGL/GOOG) |
 | Đơn vị phân tích chính | Công ty × Quý (xem DAT-01 về căn chỉnh quý lịch) |
@@ -55,8 +56,9 @@ Ràng buộc kỹ thuật: baseline naive/AR(1); model chính là Ridge/Elastic 
 ### 1.1 Mục đích
 
 > **Tên đề tài nghiên cứu:**
-> - **Tiếng Việt:** *Phân tích hiệu suất đầu tư AI và kết quả của Microsoft, Alphabet theo quý từ 2022 đến nay*
-> - **Tiếng Anh:** *Analysis of AI Investment Efficiency and Outcomes of Microsoft and Alphabet on a Quarterly Basis from 2022 to Present* (ĐV-ĐR)
+> - **Tiếng Việt:** *Đối chiếu đầu tư R&D với tín hiệu kết quả AI*
+> - **Phạm vi:** *Microsoft và Alphabet · Theo quý từ 2022*
+> - **Tiếng Anh:** *Comparing R&D Investment with AI Outcome Signals at Microsoft and Alphabet: A Quarterly Analysis since 2022* (ĐV-ĐR)
 
 ĐV-ĐR là hệ thống nghiên cứu theo quý, so sánh **mức đầu vào liên quan đến AI** (`In`) với **các chỉ báo đầu ra AI** (`Out`) của Microsoft và Alphabet. Kết quả là điểm tương đối `E = Out − In`, dùng để quan sát xu hướng trong lịch sử dữ liệu của từng công ty và kiểm tra độ nhạy khi thay đổi trọng số.
 
