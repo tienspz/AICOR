@@ -95,4 +95,5 @@ def test_combine_out_and_compute_e():
 def test_sign_robustness():
     assert sign_robustness([1.0, 2.0, 0.5]) == "ROBUST"
     assert sign_robustness([1.0, -0.2, 0.5]) == "SENSITIVE"
-    assert sign_robustness([None, 1.0]) == "SENSITIVE"
+    assert sign_robustness([None, 1.0]) is None
+    assert sign_robustness([None, None, None]) is None

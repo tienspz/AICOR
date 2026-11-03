@@ -141,3 +141,38 @@ def test_series_frame_distinguishes_missing_from_zero(features):
     early = series[series["calendar_quarter"] == "2021Q1"]
     assert early["E"].isna().all()
     assert (early["E_status"] == "insufficient_window").all()
+
+
+def test_series_frame_exposes_every_scenario(features):
+    series = series_frame(features, load_analysis_config())
+    for column in (
+        "Out_baseline",
+        "Out_simple",
+        "Out_tech",
+        "E_baseline",
+        "E_simple",
+        "E_tech",
+        "E_baseline_status",
+        "E_simple_status",
+        "E_tech_status",
+    ):
+        assert column in series.columns, f"missing scenario column {column}"
+
+    usable = series.dropna(subset=["E_baseline", "E_simple", "E_tech"])
+    assert not usable.empty, "fixture must contain at least one fully usable quarter"
+    assert not usable["E_baseline"].equals(usable["E_simple"])
+    assert not usable["E_baseline"].equals(usable["E_tech"])
+
+
+def test_series_frame_keeps_baseline_aliases(features):
+    series = series_frame(features, load_analysis_config())
+    usable = series.dropna(subset=["E"])
+    assert usable["E"].tolist() == usable["E_baseline"].tolist()
+    assert usable["Out"].tolist() == usable["Out_baseline"].tolist()
+    assert usable["E_status"].tolist() == usable["E_baseline_status"].tolist()
+
+
+def test_series_frame_empty_input_has_null_robustness():
+    empty = pd.DataFrame(columns=["company", "calendar_quarter", "period_end_date"])
+    series = series_frame(empty, load_analysis_config())
+    assert series["E_robustness"].isna().all()
