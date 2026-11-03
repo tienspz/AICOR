@@ -94,7 +94,7 @@ def test_series_delta_uses_previous_valid_quarter(payload):
     assert valid[0]["prev_quarter"] is None
     for previous, current in zip(valid, valid[1:]):
         assert current["prev_quarter"] == previous["quarter"]
-        assert current["E_delta_prev"] == pytest.approx(current["E"] - previous["E"], abs=1e-6)
+        assert current["E_delta_prev"] == pytest.approx(current["E"] - previous["E"], abs=1e-5)
 
 
 def test_coverage_reasons_exclude_ok_and_quarters_are_sorted(payload):

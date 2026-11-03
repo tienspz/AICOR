@@ -78,8 +78,13 @@ def _clean(value: Any) -> Any:
 
 def _series_rows(series: pd.DataFrame, company: str) -> list[dict[str, Any]]:
     g = series[series["company"] == company].copy()
+    g = g.sort_values("calendar_quarter")
     rows: list[dict[str, Any]] = []
+    previous_valid_e: float | None = None
+    previous_valid_quarter: str | None = None
     for _, r in g.iterrows():
+        e_value = r.get("E")
+        e_usable = e_value is not None and not pd.isna(e_value)
         rows.append(
             _clean(
                 {
@@ -88,11 +93,17 @@ def _series_rows(series: pd.DataFrame, company: str) -> list[dict[str, Any]]:
                     "available_at": r.get("available_at"),
                     "In": r.get("In"),
                     "Out": r.get("Out"),
-                    "E": r.get("E"),
+                    "E": e_value,
                     "E_simple": r.get("E_simple"),
                     "E_tech": r.get("E_tech"),
+                    "E_delta_prev": (float(e_value) - previous_valid_e)
+                    if e_usable and previous_valid_e is not None
+                    else None,
+                    "prev_quarter": previous_valid_quarter,
                     "robustness": r.get("E_robustness"),
                     "status": r.get("E_status"),
+                    "E_simple_status": r.get("E_simple_status"),
+                    "E_tech_status": r.get("E_tech_status"),
                     "product_score": r.get("product_score"),
                     "product_ma4q": r.get("product_ma4q"),
                     "trends_score": r.get("trends_score"),
@@ -110,6 +121,9 @@ def _series_rows(series: pd.DataFrame, company: str) -> list[dict[str, Any]]:
                 }
             )
         )
+        if e_usable:
+            previous_valid_e = float(e_value)
+            previous_valid_quarter = str(r["calendar_quarter"])
     return rows
 
 
@@ -164,15 +178,23 @@ def _status_payload(
     data_status: str,
 ) -> dict[str, Any]:
     coverage: dict[str, Any] = {}
-    for company, g in series.groupby("company"):
-        ok = int(g["E"].notna().sum())
+    for company, group in series.groupby("company"):
+        g = group.sort_values("calendar_quarter")
+        valid = g[g["E"].notna()]
+        missing = {
+            str(status)
+            for status in g.get("E_status", pd.Series(dtype=str)).dropna().unique()
+            if str(status) != "ok"
+        }
         coverage[str(company)] = {
             "quarters_in_panel": len(g),
-            "quarters_with_E": ok,
+            "quarters_with_E": int(valid.shape[0]),
             "quarters_with_insufficient_window": int((g.get("E_status") == "insufficient_window").sum()),
             "first_quarter": str(g["calendar_quarter"].iloc[0]) if len(g) else None,
             "last_quarter": str(g["calendar_quarter"].iloc[-1]) if len(g) else None,
-            "missing_reasons": sorted({str(s) for s in g.get("E_status", pd.Series(dtype=str)).dropna().unique()}),
+            "first_valid_quarter": str(valid["calendar_quarter"].iloc[0]) if len(valid) else None,
+            "last_valid_quarter": str(valid["calendar_quarter"].iloc[-1]) if len(valid) else None,
+            "missing_reasons": sorted(missing),
         }
 
     provenance_rows = []
@@ -311,6 +333,14 @@ def build_dashboard_payload(
                         "chưa đủ 16 quý thì ghi status=insufficient_window và không dùng cho E."
                     ),
                 },
+                "forecast": {
+                    "model": config.forecast_model,
+                    "target": config.forecast_target,
+                    "horizons": list(config.forecast_horizons),
+                    "conformal_window": config.conformal_window,
+                    "interval_levels": list(config.interval_levels),
+                    "min_train_samples": config.min_train_samples,
+                },
                 "methodology": {
                     "In": "In = z16Q(R&D theo quý) — proxy cho đầu tư AI, không phải chi tiêu AI được công bố.",
                     "Out": "Out = w_product × z(Product MA4Q) + w_trends × z(Trends MA4Q).",
@@ -318,6 +348,10 @@ def build_dashboard_payload(
                     "product_score": "Product Score = 3×A + 2×B + 1×C theo rubric v1-provisional.",
                     "ma4q": "MA4Q: trung bình động 4 quý, bắt buộc đủ 4 quý.",
                     "units": "Tiền tệ: USD millions. z-score: không đơn vị. Ratio: thập phân (0.12 = 12%).",
+                    "market": (
+                        "Giá đóng cửa điều chỉnh trung bình trong quý (Yahoo Finance, Tier B). "
+                        "Chỉ dùng làm bối cảnh, không đưa vào công thức E."
+                    ),
                 },
                 "disclaimers": DISCLAIMERS,
                 "freshness_note": "UI tự kiểm tra manifest mỗi 30 giây để phát hiện bản publish mới.",
