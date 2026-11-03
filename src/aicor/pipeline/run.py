@@ -315,7 +315,7 @@ def main(argv: list[str] | None = None) -> int:
     from aicor.pipeline.ops import configure_logging, pipeline_lock
     from aicor.pipeline.orchestrate import new_run_id, run_analysis_cycle
 
-    parser = argparse.ArgumentParser(description="AICOR pipeline runner")
+    parser = argparse.ArgumentParser(description="ĐV-ĐR pipeline runner")
     parser.add_argument(
         "--stage",
         default="all",
@@ -340,7 +340,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.stage in ("preprocess", "all"):
         with pipeline_lock(run_id=run_id):
-            print("Executing AICOR preprocessing pipeline on raw data...")
+            print("Executing ĐV-ĐR preprocessing pipeline on raw data...")
             res = run_full_pipeline()
             for name, df in res.items():
                 print(f"Generated data/processed/{name}.csv ({len(df)} rows)")

@@ -1,7 +1,7 @@
 [project]
 name = "aicor"
 version = "0.1.0"
-description = "AI Investment & Corporate Outcome Research — crawl + preprocess pipeline"
+description = "ĐV-ĐR — Hệ thống Nghiên cứu Đầu vào – Đầu ra AI (AI Input–Output Research): crawl + preprocess pipeline"
 requires-python = ">=3.12"
 dependencies = [
     "pandas>=2.2",

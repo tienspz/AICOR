@@ -1,12 +1,12 @@
-# AICOR — Đặc tả yêu cầu hệ thống (System Requirements Specification — SRS)
+# ĐV-ĐR — Đặc tả yêu cầu hệ thống (System Requirements Specification — SRS)
 
 | Thuộc tính | Giá trị |
 | --- | --- |
-| Mã tài liệu | AICOR-SRS |
+| Mã tài liệu | ĐV-ĐR-SRS |
 | Trạng thái | Baseline — đã khóa phạm vi công ty; bổ sung lớp nowcast/forecast có kiểm soát (Phase 2.5) |
 | Tên đề tài | **Phân tích hiệu suất đầu tư AI và kết quả của Microsoft, Alphabet theo quý từ 2022 đến nay** |
-| Tên tiếng Anh | **Analysis of AI Investment Efficiency and Outcomes of Microsoft and Alphabet on a Quarterly Basis from 2022 to Present** (AICOR) |
-| Hệ thống | AICOR — AI Input/Output Research (AI Investment & Corporate Outcome Research) |
+| Tên tiếng Anh | **Analysis of AI Investment Efficiency and Outcomes of Microsoft and Alphabet on a Quarterly Basis from 2022 to Present** (ĐV-ĐR) |
+| Hệ thống | **ĐV-ĐR** — Hệ thống Nghiên cứu Đầu vào – Đầu ra AI (AI Input–Output Research System) |
 | Đối tượng so sánh | Microsoft Corporation (MSFT) và Alphabet Inc. (GOOGL/GOOG) |
 | Đơn vị phân tích chính | Công ty × Quý (xem DAT-01 về căn chỉnh quý lịch) |
 | Khoảng dữ liệu chính | 2021-Q1 → 2026-Q2: 22 quý/công ty, 44 quan sát; 2021 là warm-up cho MA4Q; z16Q đủ cửa sổ từ 2024-Q4 (7 cửa sổ/công ty), 15 quý đầu bị flag; phân tích chính từ 2022 |
@@ -40,7 +40,7 @@ Tài liệu này hợp nhất hai bản SPEC trước đó của dự án, vốn
 
 **Quyết định 4 — Bổ sung lại tính nghiêm ngặt kiểu CMU bị thiếu ở bản trước:** mô hình Tier nguồn dữ liệu (S/A/B/R), hệ thống mã yêu cầu có thể truy vết, ma trận xác minh (Verification Matrix) và Định nghĩa Hoàn thành (Definition of Done).
 
-**Quyết định 5 — Bổ sung lớp nowcast/forecast có kiểm soát (AICOR Pulse), không thay đổi lõi mô tả.** AICOR mở rộng từ đo lường hồi cứu sang:
+**Quyết định 5 — Bổ sung lớp nowcast/forecast có kiểm soát (lớp dự báo ĐV-ĐR), không thay đổi lõi mô tả.** ĐV-ĐR mở rộng từ đo lường hồi cứu sang:
 - **Nowcast** `E` của quý hiện tại trước khi 10-Q được nộp (`h = 0`).
 - **Forecast** các thành phần `R&D`, `Product MA4Q`, `Trends MA4Q` (hoặc `E`/`Out` nếu config chọn) cho quý kế tiếp (`h = 1`), kèm khoảng tin cậy 80%/95%.
 - **Alert** khi interval 80% của `E` cắt 0, `E` forecast dưới ngưỡng, hoặc nowcast lệch khỏi giá trị `E` đã công bố gần nhất.
@@ -56,19 +56,19 @@ Ràng buộc kỹ thuật: baseline naive/AR(1); model chính là Ridge/Elastic 
 
 > **Tên đề tài nghiên cứu:**
 > - **Tiếng Việt:** *Phân tích hiệu suất đầu tư AI và kết quả của Microsoft, Alphabet theo quý từ 2022 đến nay*
-> - **Tiếng Anh:** *Analysis of AI Investment Efficiency and Outcomes of Microsoft and Alphabet on a Quarterly Basis from 2022 to Present* (AICOR)
+> - **Tiếng Anh:** *Analysis of AI Investment Efficiency and Outcomes of Microsoft and Alphabet on a Quarterly Basis from 2022 to Present* (ĐV-ĐR)
 
-AICOR là hệ thống nghiên cứu theo quý, so sánh **mức đầu vào liên quan đến AI** (`In`) với **các chỉ báo đầu ra AI** (`Out`) của Microsoft và Alphabet. Kết quả là điểm tương đối `E = Out − In`, dùng để quan sát xu hướng trong lịch sử dữ liệu của từng công ty và kiểm tra độ nhạy khi thay đổi trọng số.
+ĐV-ĐR là hệ thống nghiên cứu theo quý, so sánh **mức đầu vào liên quan đến AI** (`In`) với **các chỉ báo đầu ra AI** (`Out`) của Microsoft và Alphabet. Kết quả là điểm tương đối `E = Out − In`, dùng để quan sát xu hướng trong lịch sử dữ liệu của từng công ty và kiểm tra độ nhạy khi thay đổi trọng số.
 
-Từ bản cập nhật này, AICOR bổ sung **lớp nowcast/forecast có kiểm soát**: ước lượng `E` của quý hiện tại trước khi 10-Q được nộp (nowcast) và dự báo `E`/`Out` một quý tới (forecast), kèm khoảng tin cậy, cảnh báo và driver attribution. Đây là lớp mở rộng tách biệt với lõi mô tả; kết quả được gắn nhãn thử nghiệm và không phải khuyến nghị đầu tư.
+Từ bản cập nhật này, ĐV-ĐR bổ sung **lớp nowcast/forecast có kiểm soát**: ước lượng `E` của quý hiện tại trước khi 10-Q được nộp (nowcast) và dự báo `E`/`Out` một quý tới (forecast), kèm khoảng tin cậy, cảnh báo và driver attribution. Đây là lớp mở rộng tách biệt với lõi mô tả; kết quả được gắn nhãn thử nghiệm và không phải khuyến nghị đầu tư.
 
 `E` không phải ROI, lợi nhuận, tỷ suất sinh lời hay bằng chứng nhân quả.
 
-AICOR không cố ước tính một con số kế toán ẩn gọi là "AI Investment", vì báo cáo tài chính của cả hai công ty không có dòng kế toán chuẩn hóa theo quý mang tên đó. Hệ thống tách bạch bốn loại dữ liệu: dữ liệu tài chính đã báo cáo, chỉ số AI công ty công bố rõ ràng, đặc trưng tài chính suy ra (derived), và biến đại diện cho đầu tư AI (proxy, được gán nhãn rõ).
+ĐV-ĐR không cố ước tính một con số kế toán ẩn gọi là "AI Investment", vì báo cáo tài chính của cả hai công ty không có dòng kế toán chuẩn hóa theo quý mang tên đó. Hệ thống tách bạch bốn loại dữ liệu: dữ liệu tài chính đã báo cáo, chỉ số AI công ty công bố rõ ràng, đặc trưng tài chính suy ra (derived), và biến đại diện cho đầu tư AI (proxy, được gán nhãn rõ).
 
 ### 1.2 Cơ sở xây dựng đặc tả
 
-Đặc tả theo cấu trúc requirements engineering chịu ảnh hưởng từ CMU/SEI (Carnegie Mellon Software Engineering Institute): xác định yêu cầu, phân tích yêu cầu, biểu diễn yêu cầu, truyền đạt yêu cầu, tiêu chí và quy trình chấp nhận. AICOR được xem là một **hệ thống nghiên cứu**, không chỉ là một dashboard và cũng không chỉ là một mô hình dự báo.
+Đặc tả theo cấu trúc requirements engineering chịu ảnh hưởng từ CMU/SEI (Carnegie Mellon Software Engineering Institute): xác định yêu cầu, phân tích yêu cầu, biểu diễn yêu cầu, truyền đạt yêu cầu, tiêu chí và quy trình chấp nhận. ĐV-ĐR được xem là một **hệ thống nghiên cứu**, không chỉ là một dashboard và cũng không chỉ là một mô hình dự báo.
 
 Tham chiếu phương pháp (Tier R, không dùng làm dữ liệu phân tích):
 
@@ -104,7 +104,7 @@ Fiscal year end: December 31
 
 Phạm vi hoạt động của hệ thống gồm: thu thập dữ liệu tài chính/R&D, dữ liệu sản phẩm AI, Google Trends, sự kiện liên quan và giá cổ phiếu; lưu trữ append-only kèm metadata nguồn; làm sạch và chuẩn hóa theo quý; tính Product Score, MA4Q, z-score, `In`, `Out`, `E` và các kịch bản trọng số; hiển thị dashboard; ghi log đồng bộ và chất lượng dữ liệu.
 
-Từ Phase 2.5, phạm vi bổ sung **AICOR Pulse**: **nowcast** quý hiện tại, **forecast** 1 quý tới cho `E`/`Out`, khoảng tin cậy 80%/95%, **alert** theo ngưỡng và **driver attribution**; tất cả chỉ dùng dữ liệu point-in-time và được gắn nhãn thử nghiệm.
+Từ Phase 2.5, phạm vi bổ sung **lớp dự báo ĐV-ĐR**: **nowcast** quý hiện tại, **forecast** 1 quý tới cho `E`/`Out`, khoảng tin cậy 80%/95%, **alert** theo ngưỡng và **driver attribution**; tất cả chỉ dùng dữ liệu point-in-time và được gắn nhãn thử nghiệm.
 
 #### 1.3.2 Ngoài phạm vi
 
@@ -190,7 +190,7 @@ Mỗi yêu cầu có thuộc tính tối thiểu: mã, nội dung, căn cứ khi
 | RQ-06 | Forecast `E`/`Out` 1 quý tới có beat baseline naive/AR(1) trong rolling-origin backtest không, và khoảng tin cậy có đủ độ phủ? |
 | RQ-07 | Alert có phát đúng thời điểm và có tỷ lệ false positive chấp nhận được không? |
 
-### 2.3 Những câu hỏi AICOR không trả lời
+### 2.3 Những câu hỏi ĐV-ĐR không trả lời
 
 * Công ty nào đầu tư AI sinh lời nhất.
 * Một khoản đầu tư cụ thể tạo ra chính xác bao nhiêu kết quả.
@@ -362,7 +362,7 @@ Hệ thống **không được bịa giá trị** chỉ để bảng dữ liệu
 | `currency`, `unit_scale` | string | Có nếu có số tiền | Đơn vị tiền tệ, thang đơn vị |
 | `filing_date` | date/null | Nên có | Ngày filing công bố |
 | `source_url`, `source_document_id` | string | Có / Nên có | Truy vết nguồn |
-| `retrieved_at` | datetime | Có | Thời điểm AICOR lấy dữ liệu |
+| `retrieved_at` | datetime | Có | Thời điểm ĐV-ĐR lấy dữ liệu |
 
 Nếu báo cáo trình bày số lũy kế từ đầu năm (YTD), phải chuyển thành số quý độc lập bằng phép trừ các kỳ lũy kế phù hợp, và lưu phương pháp chuyển đổi. Quý 4 không có 10-Q riêng; lấy số cả năm từ 10-K trừ số 9 tháng.
 
@@ -437,7 +437,7 @@ Mỗi lần chạy thu thập ghi tối thiểu: `run_id, source_name, source_ur
 | `model_id`, `model_version` | string | Có | Model và phiên bản đã dùng |
 | `feature_set_version` | string | Có | Phiên bản feature set và quy tắc chuẩn hóa |
 
-`available_at` khác `retrieved_at`: `retrieved_at` là lúc AICOR lấy dữ liệu, còn `available_at` là lúc dữ liệu được công bố/trở nên khả dụng. Backtest phải dùng `available_at`, không dùng `retrieved_at`, để tránh nhìn trước tương lai.
+`available_at` khác `retrieved_at`: `retrieved_at` là lúc ĐV-ĐR lấy dữ liệu, còn `available_at` là lúc dữ liệu được công bố/trở nên khả dụng. Backtest phải dùng `available_at`, không dùng `retrieved_at`, để tránh nhìn trước tương lai.
 
 ---
 
@@ -607,7 +607,7 @@ Không so sánh `E` giữa hai công ty như xếp hạng hiệu suất tuyệt 
 | DSH-04 | Weight Sensitivity | So sánh kết quả của bộ trọng số 0.6/0.4, 0.5/0.5, 0.7/0.3 |
 | DSH-05 | Data Status & Evidence | Kỳ dữ liệu mới nhất, thời gian đồng bộ, trạng thái, dữ liệu thiếu, liên kết nguồn |
 | DSH-06 | Market Context | Giá cổ phiếu theo ngày của MSFT và GOOGL, nếu giữ trong phạm vi phát hành (Should) |
-| DSH-07 | AICOR Pulse — Forecast & Alerts | Nowcast/forecast `E` với interval 80%/95%, alert badge, top 3 driver attribution, `as_of_date`, model version, link model card |
+| DSH-07 | lớp dự báo ĐV-ĐR — Forecast & Alerts | Nowcast/forecast `E` với interval 80%/95%, alert badge, top 3 driver attribution, `as_of_date`, model version, link model card |
 
 ### 10.2 Quy tắc hiển thị
 
@@ -720,7 +720,7 @@ Tên thư viện có thể thay đổi khi triển khai, nhưng phải bảo to�
 
 ### 13.3 Định nghĩa hoàn thành (Definition of Done)
 
-AICOR hoàn thành khi một reviewer có thể chọn bất kỳ con số chính nào trên dashboard và truy vết:
+ĐV-ĐR hoàn thành khi một reviewer có thể chọn bất kỳ con số chính nào trên dashboard và truy vết:
 
 ```text
 Dashboard → Analysis Result (E/Out/In) → Feature (Product Score/Trends MA4Q/z-score)

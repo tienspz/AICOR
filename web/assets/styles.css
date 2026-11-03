@@ -1,5 +1,5 @@
 /* ==========================================================================
-   AICOR — Bản tin AICOR
+   ĐV-ĐR — Bản tin ĐV-ĐR
    Warm editorial research note. Light theme is the default; dark is opt-in.
    ========================================================================== */
 
@@ -216,6 +216,7 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 12px;
+  min-height: 44px;
   color: var(--ink);
   text-decoration: none;
   flex: 0 0 auto;
@@ -511,7 +512,7 @@ button {
 
 .grid-2 {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
   gap: 24px;
 }
 
@@ -519,7 +520,7 @@ button {
 
 .hero-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(290px, 100%), 1fr));
   gap: 24px;
 }
 
@@ -1208,6 +1209,13 @@ button {
 
 .data-table .strong {
   font-weight: 700;
+}
+
+.data-table .external-link {
+  display: inline-flex;
+  align-items: center;
+  min-width: 44px;
+  min-height: 44px;
 }
 
 /* ----------------------------------------------------------------- notices */

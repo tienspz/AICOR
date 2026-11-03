@@ -1,4 +1,4 @@
-"""Baseline and main models for AICOR Pulse (FCST-05).
+"""Baseline and main models for ĐV-ĐR forecast layer (FCST-05).
 
 Deliberately small: naive, pooled AR(1) and a ridge regression implemented in
 NumPy. No deep learning — ``N`` is at most a few dozen observations (SPEC §5).

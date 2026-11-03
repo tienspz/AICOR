@@ -1,4 +1,4 @@
-"""AICOR Pulse — controlled nowcast/forecast run (FCST-01 … FCST-12).
+"""ĐV-ĐR forecast layer — controlled nowcast/forecast run (FCST-01 … FCST-12).
 
 One run produces: feature snapshot → per-company point estimates with 80/95
 intervals → driver attribution → quality gate verdict → alerts → model card.

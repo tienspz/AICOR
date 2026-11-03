@@ -39,7 +39,7 @@ DISCLAIMERS = {
         "E không phải ROI, không phải lợi nhuận và không chứng minh quan hệ nhân quả."
     ),
     "experimental": (
-        "AICOR Pulse là lớp thử nghiệm: kết quả có khoảng tin cậy, as-of date và model version. "
+        "Lớp dự báo ĐV-ĐR là thử nghiệm: kết quả có khoảng tin cậy, as-of date và model version. "
         "Không phải khuyến nghị đầu tư."
     ),
     "attribution": (

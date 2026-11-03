@@ -1,5 +1,5 @@
 {
-  "run_id": "20261103T170638Z-10e1f7",
+  "run_id": "20261103T174321Z-197fdd",
   "status": "success",
   "stages": {
     "load": "ok",
@@ -9,7 +9,7 @@
   },
   "artifacts": {
     "analysis": {
-      "generated_at": "2026-11-03T17:06:38+00:00",
+      "generated_at": "2026-11-03T17:43:21+00:00",
       "config_version": "aicor-analysis-v1",
       "formula_version": "metrics-v1",
       "feature_set_version": "features-v1",
@@ -25,7 +25,7 @@
       }
     },
     "pulse": {
-      "generated_at": "2026-11-03T17:06:38+00:00",
+      "generated_at": "2026-11-03T17:43:21+00:00",
       "config_version": "aicor-analysis-v1",
       "feature_set_version": "features-v1",
       "model_version": "pulse-1d2d9370",
@@ -35,26 +35,26 @@
         "forecast_backtest": 54
       },
       "artifacts": {
-        "forecast_results.csv": "0eafcb632345d539b3ea053d2b7b3858cf255ad8165a0046c7794dfa8cabfa5c",
-        "alert_log.csv": "af09e01ece47157952001e569d245362015c7fe643466acc5832f02e7bd547ef",
+        "forecast_results.csv": "da585903f334a459d7d24f01fe5bb651f13887bc031f2ab64f2021f944347fca",
+        "alert_log.csv": "d6bd03a4e567ac346b71441afd1f86cbc25d151f2ad53aaa0b29a6f99c03c3ba",
         "forecast_backtest.csv": "ab32a78173587fb103bc15a9a7f41fb0b4f87a13b3b70b58b64f14ed2b1502a3",
         "forecast_coverage.csv": "415d6338b299ab71e915f12b99b54569e9c9adb89cb2dbe65b638901753eb5b2",
-        "model_registry.json": "804e2c99918bf82a4607a108a6c4279523b4d71a48563c84915f48bcd0a0fdf8"
+        "model_registry.json": "3cf8cde7c0481541614cae132a42a29cf36994bb96adc3a42206f473db10db06"
       },
-      "model_card_hash": "167ca3699f05fac4f752b5de6be68c21c9ca295a59ee5b8bc5acb5c9fae17260"
+      "model_card_hash": "73c23d3ad9d82e6bb6d22515047aa8c28b7ce6f180b99fb2af7f96c572544e3a"
     }
   },
   "manifest": {
     "schema": "aicor-dashboard-manifest/v1",
-    "dataset_version": "6366273d195e98c847756bc5ab789658d20a8f67d1099685710c863397cd6bb9",
-    "run_id": "20261103T170638Z-10e1f7",
-    "path": "runs/20261103T170638Z-10e1f7.json",
-    "published_at": "2026-11-03T17:06:38+00:00",
-    "bytes": 161234,
+    "dataset_version": "1022377f98b5bc96d84bca514e23aca2911c42c7575cdb12b2b8d7de46cbf5dd",
+    "run_id": "20261103T174321Z-197fdd",
+    "path": "runs/20261103T174321Z-197fdd.json",
+    "published_at": "2026-11-03T17:43:21+00:00",
+    "bytes": 161246,
     "config_version": "aicor-analysis-v1",
     "as_of_quarter": "2026Q3",
     "freshness": {
-      "generated_at": "2026-11-03T17:06:38+00:00",
+      "generated_at": "2026-11-03T17:43:21+00:00",
       "latest_data_quarter": "2026Q3",
       "last_source_sync_at": "2026-11-03T13:34:56.977722+00:00",
       "data_status": "success",

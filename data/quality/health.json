@@ -1,6 +1,6 @@
 {
-  "run_id": "20261103T170638Z-10e1f7",
-  "generated_at": "2026-11-03T17:06:38+00:00",
+  "run_id": "20261103T174321Z-197fdd",
+  "generated_at": "2026-11-03T17:43:21+00:00",
   "status": "success",
   "stages": {
     "load": "ok",
@@ -8,14 +8,14 @@
     "forecast": "insufficient_evidence",
     "publish": "ok"
   },
-  "duration_seconds": 0.359,
+  "duration_seconds": 0.366,
   "latest_data_quarter": "2026Q3",
   "data_status": "success",
   "warnings": [
     "pulse is experimental (gate not passed): quality_gate_not_passed"
   ],
   "freshness": {
-    "generated_at": "2026-11-03T17:06:38+00:00",
+    "generated_at": "2026-11-03T17:43:21+00:00",
     "latest_data_quarter": "2026Q3",
     "last_source_sync_at": "2026-11-03T13:34:56.977722+00:00",
     "data_status": "success",

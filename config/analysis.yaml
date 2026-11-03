@@ -1,6 +1,7 @@
-# AICOR — Phase 2 / 2.5 analytical configuration (NFR-03: versioned parameters)
+# ĐV-ĐR — Phase 2 / 2.5 analytical configuration (NFR-03: versioned parameters)
 #
-# This file is the single source of truth for the metric engine and AICOR Pulse.
+# This file is the single source of truth for the metric engine and the ĐV-ĐR
+# forecast layer.
 # Every artifact written by `aicor.compute` / `aicor.forecast` records
 # `config_version` from here so a result can always be reproduced.
 #

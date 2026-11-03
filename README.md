@@ -1,4 +1,7 @@
-# AICOR — AI Investment & Corporate Outcome Research
+# ĐV-ĐR — Hệ thống Nghiên cứu Đầu vào – Đầu ra AI
+
+> **Tên hệ thống:** Hệ thống Nghiên cứu Đầu vào – Đầu ra AI, viết tắt **ĐV-ĐR** (AI Input–Output Research System).
+> **Định danh kỹ thuật giữ nguyên:** Python package, `config_version` (`aicor-analysis-v1`), `model_id`, User-Agent `AICOR-research/1.0`, biến `AICOR_DATA_DIR` và đường dẫn repo GitHub vẫn dùng slug `aicor` để các artifact đã publish còn tái lập và kiểm tra được checksum.
 
 > **Đề tài:** *Phân tích hiệu suất đầu tư AI và kết quả của Microsoft, Alphabet theo quý từ 2022 đến nay*
 > *(Analysis of AI Investment Efficiency and Outcomes of Microsoft and Alphabet on a Quarterly Basis from 2022 to Present)*
@@ -17,7 +20,7 @@ $$E = Out - In$$
 
 > **Lưu ý liêm chính nghiên cứu:** Điểm $E$ là thước đo tương đối để quan sát xu hướng lịch sử và kiểm tra độ nhạy trọng số; không phải ROI, lợi nhuận hay bằng chứng quan hệ nhân quả (SRS §1.1).
 >
-> **Lớp mở rộng AICOR Pulse (Phase 2.5):** Bổ sung nowcast quý hiện tại ($h=0$) trước khi có 10-Q và forecast 1 quý tới ($h=1$) bằng mô hình tuyến tính có kiểm soát (Ridge/Elastic Net) kèm khoảng tin cậy 80%/95%, cảnh báo rủi ro (alert) và giải thích yếu tố đóng góp (driver attribution); tất cả được gắn nhãn thử nghiệm (experimental) và không phải khuyến nghị đầu tư (SRS §0 Quyết định 5, §7.6).
+> **Lớp dự báo ĐV-ĐR (Phase 2.5):** Bổ sung nowcast quý hiện tại ($h=0$) trước khi có 10-Q và forecast 1 quý tới ($h=1$) bằng mô hình tuyến tính có kiểm soát (Ridge/Elastic Net) kèm khoảng tin cậy 80%/95%, cảnh báo rủi ro (alert) và giải thích yếu tố đóng góp (driver attribution); tất cả được gắn nhãn thử nghiệm (experimental) và không phải khuyến nghị đầu tư (SRS §0 Quyết định 5, §7.6).
 
 ---
 
@@ -44,14 +47,14 @@ Dự án tuân thủ nghiêm ngặt quy trình tiền xử lý 9 thao tác của
 ┌───────────────────────────────────▼────────────────────────────────────┐
 │       METRIC & NOWCAST/FORECAST ENGINE (Phase 2 & Phase 2.5)           │
 │  - Metrics        : In = z(RD), Out = w1*z(Product) + w2*z(Trends), E  │
-│  - AICOR Pulse    : Nowcast (h=0), Forecast (h=1) qua Ridge/ElasticNet │
+│  - Dự báo ĐV-ĐR   : Nowcast (h=0), Forecast (h=1) qua Ridge/ElasticNet │
 │  - Assurance      : 80%/95% Interval, Point-in-time guard, Top 3 Driver│
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │ Validated artifacts
 ┌───────────────────────────────────▼────────────────────────────────────┐
 │         AUTOMATION & 7-VIEW DASHBOARD (Phase 3 - GitHub Pages)         │
 │  - 4 Cron Crawlers + Quality Gates tự động trên GitHub CI              │
-│  - Dashboard 7 Chế độ xem: DSH-01 đến DSH-07 (AICOR Pulse & Alerts)    │
+│  - Dashboard 7 Chế độ xem: DSH-01 đến DSH-07 (Lớp dự báo & Alerts)     │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -89,11 +92,11 @@ Các crawler hoạt động độc lập (NFR-04: một nguồn lỗi không là
 │   ├── logs/                   # Log vận hành
 │   └── sync_log.jsonl          # Nhật ký đồng bộ crawler
 ├── scripts/                    # Tiện ích đồng bộ portable Vibe Code skills
-├── src/aicor/                  # Mã nguồn chính của AICOR
+├── src/aicor/                  # Mã nguồn chính của hệ thống
 │   ├── sources/                # Crawler SEC, market, Trends và IR
 │   ├── preprocess/             # Tiền xử lý dữ liệu nguồn
 │   ├── compute/                # Tính features và In/Out/E
-│   ├── forecast/               # AICOR Pulse, backtest, alert và model card
+│   ├── forecast/               # Lớp dự báo, backtest, alert và model card
 │   └── pipeline/               # CLI, điều phối, artifacts và dashboard publish
 ├── tests/                      # Unit, contract và integration tests
 ├── web/                        # Dashboard tĩnh, không cần bước build frontend
@@ -125,6 +128,10 @@ python -m http.server 8765 --directory web
 Mở <http://localhost:8765> trong trình duyệt. Giữ cửa sổ terminal đang chạy server;
 nhấn `Ctrl+C` để dừng. Không mở `web/index.html` trực tiếp bằng `file://`, vì dashboard
 cần HTTP để tải manifest và payload dữ liệu.
+
+Để deploy dashboard lên Vercel, giữ **Root Directory** là thư mục gốc repo và đặt
+**Framework Preset** thành **Other**. Cấu hình trong `vercel.json` sẽ publish trực tiếp
+thư mục `web/`; không cần Python entrypoint hay bước build.
 
 ### 4.3 Cài đặt dependencies
 ```bash
@@ -202,7 +209,7 @@ uv run python -m aicor.pipeline.run --stage all
   - Tính toán $Out = w_1 \cdot z(\text{Product MA4Q}) + w_2 \cdot z(\text{Trends MA4Q})$ với 3 kịch bản trọng số độ nhạy ($0.6/0.4, 0.5/0.5, 0.7/0.3$).
   - Xử lý các case ngoại lệ: $std = 0 \to \text{degenerate}$, $< 4$ quý $\to \text{NULL}$.
   - Xuất bảng kết quả chuẩn hóa `analysis_results.csv` và `features_quarterly.csv`.
-- [x] **Phase 2.5: AICOR Pulse — Controlled Nowcast/Forecast Engine (FCST-01…12)** — hoàn thành, quality gate fail-closed (xem §7)
+- [x] **Phase 2.5: Lớp dự báo ĐV-ĐR — Controlled Nowcast/Forecast Engine (FCST-01…12)** — hoàn thành, quality gate fail-closed (xem §7)
   - Nowcast quý hiện tại ($h = 0$) trước khi có 10-Q và Forecast 1 quý tới ($h = 1$) cho các thành phần hoặc trực tiếp $E$.
   - Thuật toán: Baseline Naive/AR(1); mô hình chính Ridge Regression, Elastic Net hoặc Bayesian Ridge (nghiêm cấm Deep Learning vì cỡ mẫu $N \le 44$).
   - Khoảng tin cậy 80% & 95% (Conformal prediction / Bayesian interval), rào chắn Point-in-time guard (NFR-09).
@@ -216,7 +223,7 @@ uv run python -m aicor.pipeline.run --stage all
     - DSH-04: Weight Sensitivity (0.6/0.4, 0.5/0.5, 0.7/0.3)
     - DSH-05: Trạng thái & bằng chứng (Data Status & Evidence)
     - DSH-06: Bối cảnh thị trường (Market Context)
-    - DSH-07: AICOR Pulse — Forecast & Alerts (Nowcast/forecast $E$, interval 80%/95%, alert badge, top 3 driver attribution, link model card, nhãn experimental).
+    - DSH-07: Dự báo ĐV-ĐR — Forecast & Alerts (Nowcast/forecast $E$, interval 80%/95%, alert badge, top 3 driver attribution, link model card, nhãn experimental).
   - Triển khai hosting tĩnh trên GitHub Pages.
 
 ---
@@ -231,7 +238,7 @@ uv run python -m aicor.pipeline.run --stage all
 - `z16Q` = cửa sổ 16 quý gần nhất, tính riêng từng công ty. Với dữ liệu hiện tại: 7 quý/công ty có `E` (2024Q4→2026Q2); 15 quý đầu bị `insufficient_window` và **không** dùng cho `E`.
 - Giá trị thiếu luôn là `NULL` + `reason`; không có 0 thay thế.
 
-### 7.2 AICOR Pulse (Phase 2.5)
+### 7.2 Lớp dự báo ĐV-ĐR (Phase 2.5)
 
 - Code: `src/aicor/forecast/` — `snapshot.py` (point-in-time), `models.py` (naive / AR(1) / Ridge NumPy), `backtest.py` (rolling-origin + quality gate), `alerts.py`, `model_card.py`, `pulse.py`.
 - Artifact: `forecast_results.csv`, `forecast_backtest.csv`, `forecast_coverage.csv`, `alert_log.csv`, `model_registry.json`, `model_card.md`.

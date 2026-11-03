@@ -1,5 +1,5 @@
 /**
- * AICOR dashboard — Bản tin AICOR.
+ * ĐV-ĐR dashboard — Bản tin ĐV-ĐR.
  *
  * Loads the published artifact through `manifest.json`, verifies its SHA-256
  * digest when the browser exposes `crypto.subtle`, and renders seven views.
@@ -391,6 +391,7 @@ function externalLink(url, label = "Nguồn") {
     return el("span", { class: "mono", text: "—" });
   }
   return el("a", {
+    class: "external-link",
     href: url,
     target: "_blank",
     rel: "noopener noreferrer",
@@ -672,7 +673,7 @@ function applyTheme(theme) {
 function initTheme() {
   let stored = null;
   try {
-    stored = localStorage.getItem("aicor-theme");
+    stored = localStorage.getItem("dvdr-theme");
   } catch {
     stored = null;
   }
@@ -723,7 +724,7 @@ function bindControls() {
       const next = state.theme === "dark" ? "light" : "dark";
       applyTheme(next);
       try {
-        localStorage.setItem("aicor-theme", next);
+        localStorage.setItem("dvdr-theme", next);
       } catch {
         /* storage may be blocked; the theme still applies for this page */
       }
@@ -891,7 +892,7 @@ function weightsTable(m) {
 function forecastParamsTable(forecast) {
   if (!forecast) return el("p", { class: "card__sub", text: "Chưa có tham số dự báo." });
   return table({
-    caption: "Tham số AICOR Pulse",
+    caption: "Tham số dự báo ĐV-ĐR",
     columns: [
       { label: "Tham số", key: "label" },
       { label: "Giá trị", key: "value" },
@@ -2088,7 +2089,7 @@ function forecastSummaryTiles(pulse) {
           ? "Đã đạt kiểm định"
           : "Chưa đạt kiểm định"
         : "Chưa có kiểm định",
-      note: "AICOR Pulse · thử nghiệm",
+      note: "ĐV-ĐR · thử nghiệm",
     }),
     tile({
       label: "Số vòng backtest",
@@ -2238,7 +2239,7 @@ function renderForecast(root) {
     root.append(
       emptyState(
         "Chưa có kết quả dự báo",
-        "Bản publish này không kèm kết quả AICOR Pulse.",
+        "Bản publish này không kèm kết quả dự báo ĐV-ĐR.",
       ),
     );
     return;
@@ -2290,13 +2291,31 @@ const RENDERERS = {
 
 /* -------------------------------------------------------------------- init */
 
+function syncHeaderHeight() {
+  const header = document.getElementById("app-header");
+  if (!header) return;
+  const height = Math.round(header.getBoundingClientRect().height);
+  document.documentElement.style.setProperty("--header-height", `${height}px`);
+}
+
 function init() {
+  if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+  syncHeaderHeight();
   initTheme();
   bindNavigation();
   bindControls();
   setView(viewFromHash(), { focus: false, updateHash: false });
+  window.scrollTo(0, 0);
+  requestAnimationFrame(() => window.scrollTo(0, 0));
   renderAll();
   loadData({ initial: true });
+
+  const header = document.getElementById("app-header");
+  if (header && "ResizeObserver" in window) {
+    new ResizeObserver(syncHeaderHeight).observe(header);
+  } else {
+    window.addEventListener("resize", syncHeaderHeight, { passive: true });
+  }
 
   state.pollTimer = setInterval(checkForUpdates, POLL_MS);
   document.addEventListener("visibilitychange", () => {

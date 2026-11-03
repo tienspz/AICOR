@@ -1,1 +1,1 @@
-"""AICOR — AI Investment & Corporate Outcome Research."""
+"""ĐV-ĐR — Hệ thống Nghiên cứu Đầu vào – Đầu ra AI."""

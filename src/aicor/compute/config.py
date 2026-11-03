@@ -1,4 +1,4 @@
-"""Versioned configuration for the metric engine and AICOR Pulse (NFR-03).
+"""Versioned configuration for the metric engine and ĐV-ĐR forecast layer (NFR-03).
 
 Reads ``config/analysis.yaml``. Deterministic defaults are embedded so the
 engine still runs (with recorded defaults) if the file is missing — but the

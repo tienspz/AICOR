@@ -1,4 +1,4 @@
-"""Alert rules for AICOR Pulse (FCST-09).
+"""Alert rules for ĐV-ĐR forecast layer (FCST-09).
 
 Rules are evaluated only on **valid, gated** forecast results. A suppressed
 result still produces a row in ``alert_log`` with ``status='suppressed'`` and a

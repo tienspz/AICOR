@@ -1,5 +1,5 @@
 /**
- * AICOR chart primitives.
+ * ĐV-ĐR chart primitives.
  *
  * Two SVG renderers — a line chart and a bar chart — with:
  *   - a viewBox sized to the container so 15 px labels stay 15 px;
