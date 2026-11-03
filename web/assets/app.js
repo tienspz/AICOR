@@ -1,1304 +1,2307 @@
 /**
- * AICOR dashboard.
+ * AICOR dashboard — Bản tin AICOR.
  *
- * Reads exactly two artifacts: `data/manifest.json` (mutable pointer) and the
- * immutable `runs/<run_id>.json` payload it names. The payload is verified
- * against the manifest's SHA-256 before anything is rendered, so a reader can
- * never display a half-written dataset.
+ * Loads the published artifact through `manifest.json`, verifies its SHA-256
+ * digest when the browser exposes `crypto.subtle`, and renders seven views.
  *
- * This module only formats and arranges published values. It performs no
- * research arithmetic: no ratios, growth rates, averages or re-normalisation.
+ * The browser only formats published values. It never recomputes a research
+ * value, weight, interval or gate decision.
  */
 
-import { barChart, hideTooltip, lineChart } from "./chart.js";
+import { lineChart, barChart, hideTooltip } from "./chart.js";
 
-const VIEWS = ["dsh-01", "dsh-02", "dsh-03", "dsh-04", "dsh-05", "dsh-06", "dsh-07"];
-const COMPANY_COLORS = { MSFT: "var(--msft)", GOOGL: "var(--googl)" };
-const SCENARIO_META = [
-  { key: "baseline", label: "Baseline · 0.6 / 0.4", color: "var(--accent)" },
-  { key: "simple", label: "Equal · 0.5 / 0.5", color: "#0f9b8e" },
-  { key: "tech", label: "Product-heavy · 0.7 / 0.3", color: "#b06ab3" },
+const DATA_DIR = "data/";
+const POLL_MS = 30_000;
+const COMPANY_IDS = ["MSFT", "GOOGL"];
+const COMPANY_NAMES = { MSFT: "Microsoft", GOOGL: "Alphabet" };
+const CATEGORY_LABELS = { A: "Ra mắt", B: "Cập nhật", C: "Nghiên cứu" };
+const VIEWS = [
+  "tong-quan",
+  "dau-vao-dau-ra",
+  "su-kien-ai",
+  "do-vung",
+  "nguon-du-lieu",
+  "thi-truong",
+  "du-bao",
 ];
-const POLL_INTERVAL_MS = 30_000;
-const STALE_AFTER_MS = 24 * 60 * 60 * 1000;
+const VIEW_SET = new Set(VIEWS);
+
+const STATUS_LABELS = {
+  ok: "Đã tính",
+  insufficient_window: "Chưa đủ 16 quý",
+  unavailable: "Thiếu dữ liệu",
+  partial: "Một phần",
+  success: "Thành công",
+  failed: "Lỗi",
+  error: "Lỗi",
+  pending: "Chờ duyệt",
+  verified: "Đã xác minh",
+  unverified: "Chưa xác minh",
+  suppressed: "Bị chặn",
+  open: "Đang mở",
+  resolved: "Đã xử lý",
+  insufficient_evidence: "Chưa đủ bằng chứng",
+  experimental: "Thử nghiệm",
+};
 
 const state = {
   manifest: null,
   payload: null,
+  lastGoodPayload: null,
+  view: "tong-quan",
   company: "ALL",
-  view: "dsh-01",
+  theme: "light",
   loading: true,
   error: null,
-  eventCategory: "ALL",
+  staleNote: null,
+  statusFlash: null,
+  flashTimer: null,
+  integrity: { state: "pending", note: "" },
+  requestToken: 0,
+  eventsLimit: 12,
+  eventFilter: "AB",
+  fullHistory: false,
   pollTimer: null,
 };
 
-/* ------------------------------------------------------------------ dom */
+/* ---------------------------------------------------------------- DOM helpers */
+
+function appendAll(node, children) {
+  for (const child of children.flat(Infinity)) {
+    if (child === null || child === undefined || child === false) continue;
+    node.append(child instanceof Node ? child : document.createTextNode(String(child)));
+  }
+}
 
 function el(tag, attrs = {}, ...children) {
   const node = document.createElement(tag);
   for (const [key, value] of Object.entries(attrs || {})) {
     if (value === null || value === undefined || value === false) continue;
-    if (key === "class") node.className = value;
-    else if (key === "text") node.textContent = value;
+    if (key === "text") node.textContent = String(value);
+    else if (key === "class") node.className = value;
     else if (key === "dataset") Object.assign(node.dataset, value);
     else if (key.startsWith("on") && typeof value === "function") {
       node.addEventListener(key.slice(2).toLowerCase(), value);
     } else if (value === true) node.setAttribute(key, "");
     else node.setAttribute(key, String(value));
   }
-  for (const child of children.flat(3)) {
-    if (child === null || child === undefined || child === false) continue;
-    node.append(child instanceof Node ? child : document.createTextNode(String(child)));
-  }
+  appendAll(node, children);
   return node;
 }
 
-function card({ title, sub, badge, body }) {
-  return el(
-    "article",
-    { class: "card" },
-    el(
-      "div",
-      { class: "card-head" },
-      el("div", {}, el("h3", { text: title }), sub ? el("p", { class: "card-sub", text: sub }) : null),
-      badge || null,
-    ),
-    ...(Array.isArray(body) ? body : [body]),
-  );
-}
+/* -------------------------------------------------------------- formatting */
 
-function kpi(label, value, note, delta) {
-  return el(
-    "div",
-    { class: "kpi" },
-    el("span", { class: "kpi-label", text: label }),
-    el("span", { class: "kpi-value", text: value }),
-    delta || null,
-    note ? el("span", { class: "kpi-note", text: note }) : null,
-  );
-}
+const numberFormats = new Map();
 
-function table(headers, rows, caption) {
-  const thead = el(
-    "thead",
-    {},
-    el(
-      "tr",
-      {},
-      headers.map((h) =>
-        el("th", { class: h.num ? "num" : null, scope: "col", text: h.label }),
-      ),
-    ),
-  );
-  const tbody = el(
-    "tbody",
-    {},
-    rows.map((row) =>
-      el(
-        "tr",
-        {},
-        row.map((cell, i) => el("td", { class: headers[i]?.num ? "num" : null }, cell ?? "—")),
-      ),
-    ),
-  );
-  const tableNode = el("table", {}, caption ? el("caption", { class: "small", text: caption }) : null, thead, tbody);
-  return el("div", { class: "table-wrap" }, tableNode);
+function numberFormat(digits, options = {}) {
+  const key = `${digits}|${JSON.stringify(options)}`;
+  if (!numberFormats.has(key)) {
+    numberFormats.set(
+      key,
+      new Intl.NumberFormat("vi-VN", {
+        maximumFractionDigits: digits,
+        minimumFractionDigits: digits,
+        ...options,
+      }),
+    );
+  }
+  return numberFormats.get(key);
 }
-
-function details(summary, ...children) {
-  return el("details", {}, el("summary", { text: summary }), ...children);
-}
-
-function externalLink(url, label) {
-  if (!url) return el("span", { class: "cell-muted", text: "—" });
-  return el(
-    "a",
-    { href: url, target: "_blank", rel: "noopener noreferrer", title: url },
-    label || "Nguồn",
-    el("span", { "aria-hidden": "true", text: " ↗" }),
-  );
-}
-
-/* --------------------------------------------------------------- format */
 
 function isNum(value) {
   return typeof value === "number" && Number.isFinite(value);
 }
 
-function fmt(value, digits = 2) {
+function fmt(value, digits = 3) {
   if (!isNum(value)) return "—";
-  return value.toFixed(digits);
+  return numberFormat(digits).format(value);
 }
 
-function fmtSigned(value, digits = 2) {
+function fmtSigned(value, digits = 3) {
   if (!isNum(value)) return "—";
-  return `${value > 0 ? "+" : ""}${value.toFixed(digits)}`;
+  const zero = 0.5 * 10 ** -digits;
+  if (Math.abs(value) < zero) return fmt(0, digits);
+  return `${value > 0 ? "+" : "−"}${fmt(Math.abs(value), digits)}`;
 }
 
 function fmtPct(value, digits = 1) {
   if (!isNum(value)) return "—";
-  return `${(value * 100).toFixed(digits)}%`;
+  return `${fmt(value * 100, digits)}%`;
 }
 
 function fmtMoney(value) {
   if (!isNum(value)) return "—";
-  return `${value.toLocaleString("en-US", { maximumFractionDigits: 0 })} M`;
+  return `${fmt(value, 2)} USD`;
 }
 
-function fmtVolume(value) {
+function fmtCompact(value) {
   if (!isNum(value)) return "—";
-  if (value >= 1e9) return `${(value / 1e9).toFixed(2)} B`;
-  if (value >= 1e6) return `${(value / 1e6).toFixed(1)} M`;
-  return value.toLocaleString("en-US", { maximumFractionDigits: 0 });
+  return numberFormat(0, { notation: "compact" }).format(value);
 }
 
-function fmtDateTime(iso) {
-  if (!iso) return "—";
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return iso;
-  return date.toLocaleString("vi-VN", {
-    year: "numeric",
-    month: "2-digit",
+function toDate(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function fmtDate(value) {
+  const date = toDate(value);
+  if (!date) return "—";
+  return new Intl.DateTimeFormat("vi-VN", {
     day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    timeZone: "Asia/Ho_Chi_Minh",
+  }).format(date);
+}
+
+function fmtDateTime(value) {
+  const date = toDate(value);
+  if (!date) return "—";
+  return new Intl.DateTimeFormat("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  });
+    timeZone: "Asia/Ho_Chi_Minh",
+  }).format(date);
 }
 
-function relativeTime(iso) {
-  if (!iso) return "không rõ";
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "không rõ";
+function relativeTime(value) {
+  const date = toDate(value);
+  if (!date) return "không rõ";
   const diff = Date.now() - date.getTime();
-  const minutes = Math.round(diff / 60000);
+  if (!Number.isFinite(diff) || diff < 0) return "vừa xong";
+  const minutes = Math.round(diff / 60_000);
   if (minutes < 1) return "vừa xong";
   if (minutes < 60) return `${minutes} phút trước`;
   const hours = Math.round(minutes / 60);
   if (hours < 24) return `${hours} giờ trước`;
   const days = Math.round(hours / 24);
-  return `${days} ngày trước`;
+  if (days < 30) return `${days} ngày trước`;
+  const months = Math.round(days / 30);
+  if (months < 12) return `${months} tháng trước`;
+  return `${Math.round(months / 12)} năm trước`;
 }
 
-function statusBadge(status) {
-  const map = {
-    success: ["ok", "Dữ liệu đầy đủ"],
-    partial: ["warn", "Dữ liệu một phần"],
-    failed: ["danger", "Lỗi đồng bộ"],
-    ok: ["ok", "Đủ điều kiện"],
-    insufficient_window: ["warn", "Chưa đủ 16 quý"],
-    insufficient_observations: ["warn", "Thiếu quan sát"],
-    degenerate: ["warn", "std = 0"],
-    unavailable: ["danger", "Không có dữ liệu"],
-    experimental_insufficient_evidence: ["warn", "Experimental"],
-  };
-  const [kind, label] = map[status] || ["info", status || "—"];
-  return el("span", { class: `badge badge--${kind}`, text: label });
+function ageHours(value) {
+  const date = toDate(value);
+  if (!date) return null;
+  return (Date.now() - date.getTime()) / 3_600_000;
 }
 
-function companyBadge(company) {
-  return el("span", {
-    class: `badge badge--${company === "MSFT" ? "msft" : "googl"}`,
-    text: company === "MSFT" ? "MSFT" : "GOOGL",
-  });
+/* ------------------------------------------------------------ data access */
+
+function payload() {
+  return state.payload;
 }
 
-/* ----------------------------------------------------------------- data */
-
-async function sha256Hex(text) {
-  if (!globalThis.crypto?.subtle) return null;
-  const bytes = new TextEncoder().encode(text);
-  const digest = await globalThis.crypto.subtle.digest("SHA-256", bytes);
-  return Array.from(new Uint8Array(digest))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-async function fetchJSON(url) {
-  const response = await fetch(url, { cache: "no-store" });
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status} khi tải ${url}`);
-  }
-  return response.json();
-}
-
-async function fetchManifest() {
-  return fetchJSON(`data/manifest.json?ts=${Date.now()}`);
-}
-
-async function fetchPayload(manifest) {
-  const url = `data/${manifest.path}?v=${encodeURIComponent(manifest.dataset_version)}`;
-  const response = await fetch(url, { cache: "no-store" });
-  if (!response.ok) throw new Error(`HTTP ${response.status} khi tải ${url}`);
-  const text = await response.text();
-  const digest = await sha256Hex(text);
-  if (digest && digest !== manifest.dataset_version) {
-    throw new Error("Bản dữ liệu vừa tải không khớp checksum trong manifest — thử tải lại.");
-  }
-  return JSON.parse(text);
-}
-
-async function loadData({ initial = false } = {}) {
-  if (initial) {
-    state.loading = true;
-    renderShell();
-  }
-  try {
-    const manifest = await fetchManifest();
-    const payload = await fetchPayload(manifest);
-    state.manifest = manifest;
-    state.payload = payload;
-    state.error = null;
-    state.loading = false;
-    renderAll();
-  } catch (error) {
-    state.loading = false;
-    state.error = error instanceof Error ? error.message : String(error);
-    renderAll();
-  }
-}
-
-/* --------------------------------------------------------------- render */
-
-function currentPapers() {
-  const payload = state.payload;
-  if (!payload?.series) return [];
-  return Object.keys(payload.series);
-}
-
-function visibleCompanies() {
-  return state.company === "ALL" ? currentPapers() : [state.company];
+function meta() {
+  return state.payload?.meta || {};
 }
 
 function seriesFor(company) {
   return state.payload?.series?.[company] || [];
 }
 
+function coverageFor(company) {
+  return state.payload?.status?.coverage?.[company] || null;
+}
+
+function visibleCompanies() {
+  return state.company === "ALL" ? COMPANY_IDS.slice() : [state.company];
+}
+
 function usableRows(company) {
   return seriesFor(company).filter((row) => isNum(row.E));
 }
 
-function renderShell() {
-  const status = document.getElementById("header-status");
-  status.replaceChildren(
-    el("span", { class: "status-pill status-pill--loading", text: "Đang tải dữ liệu…" }),
-  );
-  const banner = document.getElementById("global-banner");
-  banner.hidden = true;
-  for (const view of VIEWS) {
-    const body = document.querySelector(`#${view} [data-view-body]`);
-    if (body) body.replaceChildren(el("div", { class: "skeleton" }), el("div", { class: "skeleton" }));
-  }
-}
-
-function renderHeader() {
-  const status = document.getElementById("header-status");
-  if (state.loading) {
-    status.replaceChildren(el("span", { class: "status-pill status-pill--loading", text: "Đang tải dữ liệu…" }));
-    return;
-  }
-  if (state.error) {
-    status.replaceChildren(el("span", { class: "status-pill status-pill--failed", text: "Không tải được dữ liệu" }));
-    return;
-  }
-
-  const meta = state.payload?.meta || {};
-  const freshness = state.manifest?.freshness || {};
-  const publishedAt = state.manifest?.published_at;
-  const age = publishedAt ? Date.now() - new Date(publishedAt).getTime() : null;
-  const stale = age !== null && age > STALE_AFTER_MS;
-
-  const dataStatus = freshness.data_status || "success";
-  const pill = el("span", {
-    class: `status-pill status-pill--${stale ? "stale" : dataStatus === "success" ? "ok" : dataStatus === "partial" ? "partial" : "failed"}`,
-    text: stale ? "Dữ liệu có thể đã cũ" : dataStatus === "success" ? "Đồng bộ đầy đủ" : dataStatus === "partial" ? "Đồng bộ một phần" : "Đồng bộ lỗi",
-  });
-
-  status.replaceChildren(
-    pill,
-    el("span", { class: "status-meta", text: `Cập nhật ${relativeTime(publishedAt)} · kỳ ${meta.as_of_quarter || "—"}` }),
-    el("span", { class: "status-meta", text: `run ${state.manifest?.run_id || "—"}` }),
-  );
-
-  const footer = document.getElementById("footer-meta");
-  if (footer) {
-    footer.textContent = [
-      `dataset ${state.manifest?.dataset_version?.slice(0, 12) || "—"}`,
-      `config ${meta.config_version || "—"}`,
-      `formula ${meta.formula_version || "—"}`,
-      `published ${fmtDateTime(publishedAt)}`,
-    ].join(" · ");
-  }
-}
-
-function renderBanners() {
-  const banner = document.getElementById("global-banner");
-  if (state.error) {
-    banner.hidden = false;
-    banner.className = "notice notice--danger";
-    banner.replaceChildren(
-      el("strong", { text: "Không tải được dữ liệu. " }),
-      el("span", { text: state.error }),
-      el("button", { class: "ghost-btn", type: "button", onclick: () => loadData({ initial: true }) }, "Thử lại"),
-    );
-    return;
-  }
-  if (state.loading) {
-    banner.hidden = false;
-    banner.className = "notice notice--loading";
-    banner.replaceChildren(el("span", { text: "Đang tải artifact đã publish…" }));
-    return;
-  }
-  const status = state.payload?.status?.data_status;
-  if (status === "partial") {
-    banner.hidden = false;
-    banner.className = "notice notice--warn";
-    banner.replaceChildren(
-      el("strong", { text: "Dữ liệu một phần. " }),
-      el("span", {
-        text: "Một nguồn thu thập lỗi hoặc trống. Giá trị của nguồn khác vẫn được giữ; xem DSH-05 để biết chi tiết.",
-      }),
-    );
-    return;
-  }
-  banner.hidden = true;
-}
-
-function renderEmpty(message) {
-  return el("div", { class: "notice notice--warn" }, el("strong", { text: "Không có dữ liệu. " }), message);
-}
-
-function note(text, kind = "") {
-  return el("div", { class: `notice ${kind ? `notice--${kind}` : ""}` }, el("span", { text }));
-}
-
-/* --------------------------------------------------------------- views */
-
-function latestRow(company) {
-  const rows = seriesFor(company);
-  for (let i = rows.length - 1; i >= 0; i -= 1) {
-    if (isNum(rows[i].E)) return rows[i];
-  }
-  return rows[rows.length - 1] || null;
-}
-
-function previousUsableRow(company) {
+function latestValidRow(company) {
   const rows = usableRows(company);
-  return rows.length >= 2 ? rows[rows.length - 2] : null;
+  return rows.length ? rows[rows.length - 1] : null;
 }
 
-function renderDsh01() {
-  const payload = state.payload;
-  if (!payload) return [renderEmpty("Chưa có payload dashboard.")];
-  const companies = visibleCompanies();
-  const nodes = [];
+function rowMap(company) {
+  return new Map(seriesFor(company).map((row) => [row.quarter, row]));
+}
 
-  const kpis = el("div", { class: "grid grid--4" });
+function allQuarters() {
+  const quarters = meta().quarters;
+  if (Array.isArray(quarters) && quarters.length) return quarters;
+  return [...new Set(COMPANY_IDS.flatMap((company) => seriesFor(company).map((row) => row.quarter)))].sort();
+}
+
+function firstValidIndex(companies) {
+  const quarters = allQuarters();
+  let index = quarters.length;
   for (const company of companies) {
-    const row = latestRow(company);
-    const prev = previousUsableRow(company);
-    const delta = row && prev && isNum(row.E) && isNum(prev.E) ? row.E - prev.E : null;
-    kpis.appendChild(
-      card({
-        title: `${company} · E mới nhất`,
-        sub: row ? `${row.quarter} · ${row.period_end_date}` : "Không có dữ liệu",
-        badge: row && row.robustness ? el("span", { class: `badge ${row.robustness === "ROBUST" ? "badge--ok" : "badge--warn"}`, text: row.robustness }) : null,
-        body: kpi(
-          "E = Out − In",
-          fmt(row?.E, 3),
-          row && isNum(row.E) ? "z-score tương đối, không phải ROI" : "Chưa đủ điều kiện tính E",
-          delta === null
-            ? null
-            : el("span", {
-                class: `kpi-delta ${delta >= 0 ? "kpi-delta--up" : "kpi-delta--down"}`,
-                text: `${fmtSigned(delta, 3)} so với quý trước`,
-              }),
-        ),
-      }),
-    );
+    const candidate = quarters.indexOf(coverageFor(company)?.first_valid_quarter);
+    if (candidate >= 0) index = Math.min(index, candidate);
   }
-  if (kpis.childElementCount) nodes.push(kpis);
-
-  const chartSeries = companies.map((company) => ({
-    name: company,
-    color: COMPANY_COLORS[company] || "var(--accent)",
-    points: seriesFor(company).map((row) => ({
-      label: row.quarter,
-      value: isNum(row.E) ? row.E : null,
-      note: isNum(row.E)
-        ? `Out ${fmt(row.Out, 3)} · In ${fmt(row.In, 3)} · ${row.robustness || ""}`
-        : `Không đủ dữ liệu (${row.status})`,
-    })),
-  }));
-
-  const chartHost = el("div");
-  nodes.push(
-    card({
-      title: "E theo quý",
-      sub: "Đường bị ngắt tại quý không đủ điều kiện — không vẽ 0 thay cho dữ liệu thiếu.",
-      body: [chartHost],
-    }),
-  );
-  queueMicrotask(() => lineChart(chartHost, { series: chartSeries, ariaLabel: "Điểm E theo quý của MSFT và GOOGL" }));
-
-  const windowNote = Object.entries(payload.status?.coverage || {})
-    .filter(([company]) => companies.includes(company))
-    .map(([company, cov]) => `${company}: ${cov.quarters_with_E}/${cov.quarters_in_panel} quý có E`)
-    .join(" · ");
-  nodes.push(
-    note(
-      `z16Q cần 16 quý lịch sử, nên các quý đầu bị gắn insufficient_window và không dùng cho E. ${windowNote}.`,
-    ),
-  );
-
-  const rows = companies.flatMap((company) =>
-    seriesFor(company)
-      .filter((row) => isNum(row.E) || row.status !== "ok")
-      .slice(-12)
-      .reverse()
-      .map((row) => [
-        companyBadge(company),
-        row.quarter,
-        fmt(row.In, 3),
-        fmt(row.Out, 3),
-        el("strong", { text: fmtSigned(row.E, 3) }),
-        statusBadge(row.status),
-        externalLink(row.source_url, "SEC"),
-      ]),
-  );
-  nodes.push(
-    details(
-      "Bảng số liệu chi tiết (12 quý gần nhất)",
-      table(
-        [
-          { label: "Công ty" },
-          { label: "Quý" },
-          { label: "In", num: true },
-          { label: "Out", num: true },
-          { label: "E", num: true },
-          { label: "Trạng thái" },
-          { label: "Nguồn" },
-        ],
-        rows,
-      ),
-    ),
-  );
-
-  return nodes;
+  return index === quarters.length ? 0 : index;
 }
 
-function renderDsh02() {
-  const payload = state.payload;
-  if (!payload) return [renderEmpty("Chưa có payload dashboard.")];
-  const companies = visibleCompanies();
-  const nodes = [];
+function companyName(id) {
+  const known = meta().companies?.find((item) => item.id === id);
+  return known?.name ? COMPANY_NAMES[id] || known.name : COMPANY_NAMES[id] || id;
+}
 
+function companyMeta(id) {
+  return meta().companies?.find((item) => item.id === id) || null;
+}
+
+function statusLabel(status) {
+  if (!status) return "—";
+  return STATUS_LABELS[status] || String(status);
+}
+
+function categoryLabel(category) {
+  return CATEGORY_LABELS[category] || String(category);
+}
+
+function eSentence(value) {
+  if (!isNum(value)) return "Chưa đủ dữ liệu để tính điểm E";
+  if (value > 0.0005) return "Đầu ra lớn hơn đầu vào";
+  if (value < -0.0005) return "Đầu vào lớn hơn đầu ra";
+  return "Hai bên cân bằng";
+}
+
+function reasonFromCoverage(company) {
+  const reasons = coverageFor(company)?.missing_reasons || [];
+  if (!reasons.length) return "";
+  return `Lý do: ${reasons.map(statusLabel).join(", ")}.`;
+}
+
+function coverageReasonSentence(companies) {
+  const groups = new Map();
   for (const company of companies) {
-    const host = el("div");
-    nodes.push(
-      card({
-        title: `${company} · In vs Out`,
-        sub: "Cùng thang z-score. Khoảng trống = chưa đủ 16 quý cho z16Q.",
-        body: [host],
-      }),
-    );
-    const rows = seriesFor(company);
-    queueMicrotask(() =>
-      lineChart(host, {
-        series: [
-          {
-            name: "In · z(R&D)",
-            color: "var(--googl)",
-            points: rows.map((row) => ({ label: row.quarter, value: isNum(row.In) ? row.In : null })),
-          },
-          {
-            name: "Out · tổng hợp",
-            color: "var(--msft)",
-            points: rows.map((row) => ({ label: row.quarter, value: isNum(row.Out) ? row.Out : null })),
-          },
-        ],
-        ariaLabel: `In và Out theo quý của ${company}`,
+    const reasons = coverageFor(company)?.missing_reasons || [];
+    if (!reasons.length) continue;
+    const key = reasons.join("|");
+    if (!groups.has(key)) groups.set(key, { reasons, names: [] });
+    groups.get(key).names.push(companyName(company));
+  }
+  if (!groups.size) return "Không có lý do thiếu dữ liệu được ghi nhận.";
+  const parts = [...groups.values()].map(
+    ({ reasons, names }) =>
+      `${reasons.map(statusLabel).join(", ")} (${names.join(", ")})`,
+  );
+  return `Lý do thiếu dữ liệu: ${parts.join("; ")}.`;
+}
+
+function deltaClass(value) {
+  if (!isNum(value) || Math.abs(value) < 0.0005) return "";
+  return value > 0 ? "delta--up" : "delta--down";
+}
+
+/* --------------------------------------------------------------- UI builders */
+
+function card({ title, sub, body, actions = null, id = null, className = "" }) {
+  const node = el("section", { class: `card ${className}`.trim(), id });
+  if (title || sub || actions) {
+    const head = el("div", { class: "card__head" });
+    const text = el("div");
+    if (title) text.append(el("h2", { class: "card__title", text: title }));
+    if (sub) text.append(el("p", { class: "card__sub", text: sub }));
+    head.append(text);
+    if (actions) head.append(actions);
+    node.append(head);
+  }
+  node.append(el("div", { class: "card__body" }, body));
+  return node;
+}
+
+function chartFrame() {
+  return el("div", { class: "chart-frame" });
+}
+
+function tile({ label, value, note = null }) {
+  return el(
+    "div",
+    { class: "tile" },
+    el("p", { class: "tile__label", text: label }),
+    el("p", { class: "tile__value", text: value }),
+    note ? el("p", { class: "tile__note", text: note }) : null,
+  );
+}
+
+function table({ caption, columns, rows, className = "" }) {
+  const wrap = el("div", {
+    class: "table-scroll",
+    tabindex: "0",
+    role: "region",
+    "aria-label": caption || "Bảng dữ liệu",
+  });
+  const node = el("table", { class: `data-table ${className}`.trim() });
+  if (caption) node.append(el("caption", { text: caption }));
+
+  const headRow = el("tr");
+  for (const column of columns) {
+    headRow.append(
+      el("th", {
+        scope: "col",
+        class: column.numeric ? "num" : null,
+        text: column.label,
       }),
     );
   }
+  node.append(el("thead", {}, headRow));
 
-  const componentHost = el("div");
-  nodes.push(
-    card({
-      title: "Thành phần Out",
-      sub: "Product MA4Q và Trends MA4Q đã chuẩn hóa — hai đầu vào của Out.",
-      body: [componentHost],
-    }),
-  );
-  const primary = companies[0];
-  const rows = seriesFor(primary);
-  queueMicrotask(() =>
-    lineChart(componentHost, {
-      series: [
-        {
-          name: `${primary} z(Product MA4Q)`,
-          color: "#0f9b8e",
-          points: rows.map((row) => ({ label: row.quarter, value: isNum(row.z_product_ma4q) ? row.z_product_ma4q : null })),
-        },
-        {
-          name: `${primary} z(Trends MA4Q)`,
-          color: "#b06ab3",
-          points: rows.map((row) => ({ label: row.quarter, value: isNum(row.z_trends_ma4q) ? row.z_trends_ma4q : null })),
-        },
-      ],
-      ariaLabel: `Thành phần đầu ra của ${primary}`,
-    }),
-  );
-
-  const tableRows = companies.flatMap((company) =>
-    seriesFor(company)
-      .slice(-8)
-      .reverse()
-      .map((row) => [
-        companyBadge(company),
-        row.quarter,
-        fmt(row.rd_expense, 0),
-        fmtPct(row.rd_intensity),
-        fmtPct(row.capex_intensity),
-        fmt(row.product_ma4q, 2),
-        fmt(row.trends_ma4q, 2),
-      ]),
-  );
-  nodes.push(
-    details(
-      "Bảng đầu vào (8 quý gần nhất)",
-      table(
-        [
-          { label: "Công ty" },
-          { label: "Quý" },
-          { label: "R&D (USD M)", num: true },
-          { label: "R&D/Revenue", num: true },
-          { label: "CapEx/Revenue", num: true },
-          { label: "Product MA4Q", num: true },
-          { label: "Trends MA4Q", num: true },
-        ],
-        tableRows,
-      ),
-    ),
-  );
-
-  return nodes;
-}
-
-function renderDsh03() {
-  const payload = state.payload;
-  if (!payload) return [renderEmpty("Chưa có payload dashboard.")];
-  const companies = visibleCompanies();
-  const nodes = [];
-
-  const filters = el("div", { class: "filters" }, el("span", { class: "small", text: "Phân loại:" }));
-  for (const category of ["ALL", "A", "B", "C"]) {
-    filters.appendChild(
-      el(
-        "button",
-        {
-          type: "button",
-          class: "chip",
-          "aria-pressed": String(state.eventCategory === category),
-          onclick: () => {
-            state.eventCategory = category;
-            renderCurrentView();
-          },
-        },
-        category === "ALL" ? "Tất cả" : `${category} (${category === "A" ? "launch/GA" : category === "B" ? "update/preview" : "research"})`,
-      ),
-    );
-  }
-  nodes.push(filters);
-
-  const events = (payload.events || []).filter(
-    (event) =>
-      companies.includes(event.company) &&
-      (state.eventCategory === "ALL" || event.category === state.eventCategory),
-  );
-
-  if (!events.length) {
-    nodes.push(renderEmpty("Không có sự kiện phù hợp bộ lọc."));
-  } else {
-    const list = el(
-      "ul",
-      { class: "timeline", "aria-label": "Dòng thời gian sự kiện AI" },
-      events.slice(0, 60).map((event) =>
-        el(
-          "li",
-          {},
-          el("div", { class: "timeline-date", text: event.date }),
-          el("div", { class: "timeline-title", text: event.name }),
-          el(
-            "div",
-            { class: "timeline-meta" },
-            companyBadge(event.company),
-            el("span", { class: `badge badge--${event.category === "A" ? "ok" : event.category === "B" ? "info" : "warn"}`, text: `Hạng ${event.category}` }),
-            el("span", { text: event.review_status === "reviewed" ? "đã review" : event.review_status || "—" }),
-            externalLink(event.source_url, "Nguồn"),
-          ),
-          event.rationale ? el("p", { class: "timeline-rationale", text: event.rationale }) : null,
-        ),
-      ),
-    );
-    nodes.push(card({ title: "Sự kiện & công bố AI", sub: "Sắp xếp mới nhất trước · tối đa 60 mục", body: [list] }));
-  }
-
-  const primary = companies[0];
-  const host = el("div");
-  nodes.push(
-    card({
-      title: `${primary} · Product Score theo quý`,
-      sub: "3×A + 2×B + 1×C · rubric v1-provisional",
-      body: [host],
-    }),
-  );
-  queueMicrotask(() =>
-    barChart(host, {
-      points: seriesFor(primary).map((row) => ({
-        label: row.quarter,
-        value: isNum(row.product_score) ? row.product_score : null,
-        note: `A ${row.count_a ?? 0} · B ${row.count_b ?? 0} · C ${row.count_c ?? 0}`,
-      })),
-      valueLabel: "Product Score",
-      ariaLabel: `Product Score theo quý của ${primary}`,
-    }),
-  );
-
-  return nodes;
-}
-
-function renderDsh04() {
-  const payload = state.payload;
-  if (!payload) return [renderEmpty("Chưa có payload dashboard.")];
-  const companies = visibleCompanies();
-  const nodes = [];
-
-  for (const company of companies) {
-    const rows = seriesFor(company);
-    const host = el("div");
-    nodes.push(
-      card({
-        title: `${company} · E theo ba kịch bản trọng số`,
-        sub: "Chỉ khác nhau ở trọng số Product/Trends; In giữ nguyên.",
-        body: [host],
-      }),
-    );
-    queueMicrotask(() =>
-      lineChart(host, {
-        series: SCENARIO_META.map((scenario) => ({
-          name: scenario.label,
-          color: scenario.color,
-          points: rows.map((row) => ({ label: row.quarter, value: isNum(row[`E_${scenario.key}`]) ? row[`E_${scenario.key}`] : null })),
-        })),
-        ariaLabel: `Độ nhạy trọng số của ${company}`,
-      }),
-    );
-  }
-
-  const tableRows = companies.flatMap((company) =>
-    usableRows(company)
-      .slice(-8)
-      .reverse()
-      .map((row) => [
-        companyBadge(company),
-        row.quarter,
-        fmtSigned(row.E_simple, 3),
-        fmtSigned(row.E, 3),
-        fmtSigned(row.E_tech, 3),
-        el("span", { class: `badge ${row.robustness === "ROBUST" ? "badge--ok" : "badge--warn"}`, text: row.robustness || "—" }),
-      ]),
-  );
-
-  nodes.push(
-    table(
-      [
-        { label: "Công ty" },
-        { label: "Quý" },
-        { label: "0.5 / 0.5", num: true },
-        { label: "0.6 / 0.4", num: true },
-        { label: "0.7 / 0.3", num: true },
-        { label: "Kết luận" },
-      ],
-      tableRows,
-      "ROBUST: mọi kịch bản cùng dấu E. SENSITIVE: dấu thay đổi theo trọng số.",
-    ),
-  );
-  nodes.push(
-    note(
-      "Kết luận “ROBUST” chỉ nói rằng dấu của E không đổi khi đổi trọng số. Đây không phải kiểm định thống kê và không chứng minh E là chỉ báo duy nhất đáng tin.",
-      "warn",
-    ),
-  );
-
-  return nodes;
-}
-
-function renderDsh05() {
-  const payload = state.payload;
-  if (!payload) return [renderEmpty("Chưa có payload dashboard.")];
-  const status = payload.status || {};
-  const freshness = status.freshness || {};
-  const nodes = [];
-
-  nodes.push(
-    el(
-      "div",
-      { class: "grid grid--4" },
-      card({
-        title: "Độ mới",
-        sub: `Publish ${relativeTime(state.manifest?.published_at)}`,
-        body: kpi("Kỳ dữ liệu mới nhất", payload.meta?.as_of_quarter || "—", `Generated ${fmtDateTime(freshness.generated_at)}`),
-      }),
-      card({
-        title: "Trạng thái đồng bộ",
-        sub: "Lần chạy nguồn gần nhất",
-        body: kpi("Sync", status.data_status || "—", `Nguồn gần nhất: ${fmtDateTime(freshness.last_source_sync_at)}`),
-      }),
-      card({
-        title: "Run",
-        sub: payload.meta?.run_id || "—",
-        body: kpi("Config", payload.meta?.config_version || "—", `Formula ${payload.meta?.formula_version || "—"}`),
-      }),
-      card({
-        title: "SLA",
-        sub: "Không cam kết uptime",
-        body: kpi("Uptime", "chưa đo", "Freshness = chu kỳ chạy pipeline, không phải SLA."),
-      }),
-    ),
-  );
-
-  const coverageRows = Object.entries(status.coverage || {}).map(([company, cov]) => [
-    companyBadge(company),
-    String(cov.quarters_in_panel),
-    String(cov.quarters_with_E),
-    String(cov.quarters_with_insufficient_window),
-    `${cov.first_quarter || "—"} → ${cov.last_quarter || "—"}`,
-    (cov.missing_reasons || []).join(", ") || "—",
-  ]);
-  nodes.push(
-    card({
-      title: "Độ phủ dữ liệu",
-      sub: "Số quý có E hợp lệ so với số quý trong panel",
-      body: table(
-        [
-          { label: "Công ty" },
-          { label: "Quý trong panel", num: true },
-          { label: "Quý có E", num: true },
-          { label: "insufficient_window", num: true },
-          { label: "Khoảng" },
-          { label: "Lý do thiếu" },
-        ],
-        coverageRows,
-      ),
-    }),
-  );
-
-  const syncRows = (status.recent_sync || []).map((entry) => [
-    entry.source_type || "—",
-    entry.company || "—",
-    statusBadge(entry.status),
-    fmtDateTime(entry.finished_at),
-    entry.records_fetched ?? "—",
-    entry.error_message ? el("span", { class: "cell-muted", text: String(entry.error_message).slice(0, 160) }) : "—",
-  ]);
-  nodes.push(
-    details(
-      "Sync log gần nhất",
-      syncRows.length
-        ? table(
-            [
-              { label: "Nguồn" },
-              { label: "Công ty" },
-              { label: "Trạng thái" },
-              { label: "Kết thúc" },
-              { label: "Bản ghi", num: true },
-              { label: "Lỗi" },
-            ],
-            syncRows,
-          )
-        : el("p", { class: "small", text: "Không có sync log." }),
-    ),
-  );
-
-  const provenanceRows = (status.provenance || [])
-    .slice()
-    .reverse()
-    .slice(0, 24)
-    .map((row) => [
-      row.source_id,
-      companyBadge(row.company),
-      row.period_end_date,
-      row.form || "—",
-      row.filing_date || "—",
-      el("span", { class: "mono", text: row.accession_number || "—" }),
-      externalLink(row.source_url, "SEC filing"),
-    ]);
-  nodes.push(
-    card({
-      title: "Truy vết nguồn",
-      sub: "source_id → source_url (SEC filing index). 24 dòng gần nhất.",
-      body: provenanceRows.length
-        ? table(
-            [
-              { label: "source_id" },
-              { label: "Công ty" },
-              { label: "Kỳ" },
-              { label: "Form" },
-              { label: "Filed" },
-              { label: "Accession" },
-              { label: "Nguồn" },
-            ],
-            provenanceRows,
-          )
-        : el("p", { class: "small", text: "Không có dữ liệu provenance trong artifact này." }),
-    }),
-  );
-
-  nodes.push(note(payload.meta?.disclaimers?.provenance || "", "ok"));
-  return nodes;
-}
-
-function renderDsh06() {
-  const payload = state.payload;
-  if (!payload) return [renderEmpty("Chưa có payload dashboard.")];
-  const market = payload.market || {};
-  const companies = visibleCompanies();
-  const nodes = [];
-
-  for (const company of companies) {
-    const rows = market[company] || [];
-    if (!rows.length) {
-      nodes.push(renderEmpty(`Không có dữ liệu thị trường cho ${company}.`));
-      continue;
+  const tbody = el("tbody");
+  for (const row of rows) {
+    const tr = el("tr");
+    for (const column of columns) {
+      const td = el("td", { class: column.numeric ? "num" : null });
+      const value = column.render ? column.render(row) : row[column.key];
+      if (value instanceof Node) td.append(value);
+      else td.textContent = value === null || value === undefined ? "—" : String(value);
+      tr.append(td);
     }
-    const host = el("div");
-    nodes.push(
-      card({
-        title: `${company} · Giá đóng cửa điều chỉnh theo quý`,
-        sub: "Yahoo Finance (Tier B) · chỉ là bối cảnh, không dùng trong E",
-        body: [host],
-      }),
-    );
-    queueMicrotask(() =>
-      lineChart(host, {
-        series: [
-          {
-            name: `${company} adj_close`,
-            color: COMPANY_COLORS[company] || "var(--accent)",
-            points: rows.map((row) => ({
-              label: row.quarter,
-              value: isNum(row.adj_close) ? row.adj_close : null,
-              note: `Volume ${fmtVolume(row.volume)}`,
-            })),
-          },
-        ],
-        ariaLabel: `Giá cổ phiếu theo quý của ${company}`,
-      }),
-    );
+    tbody.append(tr);
   }
-
-  const rows = companies.flatMap((company) =>
-    (market[company] || [])
-      .slice(-6)
-      .reverse()
-      .map((row) => [companyBadge(company), row.quarter, fmt(row.adj_close, 2), fmtVolume(row.volume)]),
-  );
-  if (rows.length) {
-    nodes.push(
-      table(
-        [
-          { label: "Công ty" },
-          { label: "Quý" },
-          { label: "Adj. close", num: true },
-          { label: "Volume", num: true },
-        ],
-        rows,
-        "Giá là trung bình đóng cửa điều chỉnh trong quý; không phải giá trị tại một ngày cụ thể.",
-      ),
-    );
-  }
-
-  nodes.push(note("Dữ liệu giá có thể được nhà cung cấp điều chỉnh về sau và không phải nguồn chính thức.", "warn"));
-  return nodes;
+  node.append(tbody);
+  wrap.append(node);
+  return wrap;
 }
 
-function gateBanner(pulse) {
-  const gate = pulse.gate || {};
-  if (!gate.checks?.length) {
-    return note("Chưa có backtest để áp dụng quality gate (FCST-08).", "warn");
+function detailsBlock(summary, ...children) {
+  return el(
+    "details",
+    { class: "disclosure" },
+    el("summary", { text: summary }),
+    el("div", { class: "disclosure__body" }, children),
+  );
+}
+
+function badge(text, tone = "neutral") {
+  return el("span", { class: `badge badge--${tone}`, text });
+}
+
+function statusBadge(status) {
+  if (status === "ok") return badge(statusLabel(status), "pos");
+  if (status === "insufficient_window") return badge(statusLabel(status), "warn");
+  if (!status) return badge("—", "neutral");
+  return badge(statusLabel(status), "neutral");
+}
+
+function externalLink(url, label = "Nguồn") {
+  if (typeof url !== "string" || !/^https?:\/\//i.test(url)) {
+    return el("span", { class: "mono", text: "—" });
   }
-  if (gate.passed) {
-    return note(
-      "Quality gate đạt: mô hình chính beat naive trên MAE và RMSE ở backtest rolling-origin. Kết quả vẫn là thử nghiệm.",
-      "ok",
+  return el("a", {
+    href: url,
+    target: "_blank",
+    rel: "noopener noreferrer",
+    text: label,
+  });
+}
+
+function sourceLink(row) {
+  return externalLink(row?.source_url, "SEC");
+}
+
+function emptyState(title, reason = null) {
+  return el(
+    "div",
+    { class: "empty-state" },
+    el("p", { class: "empty-state__title", text: title }),
+    reason ? el("p", { class: "empty-state__reason", text: reason }) : null,
+  );
+}
+
+function noticeBlock(tone, title, body, actions = null) {
+  const node = el("div", { class: `notice notice--${tone}` });
+  if (title) node.append(el("p", { class: "notice__title", text: title }));
+  if (body) node.append(el("p", { class: "notice__body", text: body }));
+  if (actions) node.append(el("div", { class: "notice__actions" }, actions));
+  return node;
+}
+
+function subheading(text) {
+  return el("h3", { class: "subheading", text });
+}
+
+function linkTo(href, view, text) {
+  return el("a", { class: "next-link", href, "data-view": view, text });
+}
+
+function ribbonRow(company) {
+  const rows = rowMap(company);
+  const quarters = allQuarters();
+  const track = el("div", {
+    class: "ribbon-track",
+    role: "list",
+    "aria-label": `Các quý dữ liệu của ${companyName(company)}`,
+  });
+  for (const quarter of quarters) {
+    const row = rows.get(quarter);
+    const valid = Boolean(row && isNum(row.E));
+    const label = valid ? "đã tính được E" : "chưa đủ 16 quý";
+    track.append(
+      el("span", {
+        class: `ribbon-cell ${valid ? "ribbon-cell--valid" : "ribbon-cell--warmup"}`,
+        role: "listitem",
+        title: `${quarter} — ${label}`,
+        "aria-label": `${quarter} — ${label}`,
+      }),
     );
   }
   return el(
     "div",
-    { class: "notice notice--warn" },
+    { class: "ribbon-row" },
+    el("p", { class: "ribbon-label", text: companyName(company) }),
+    track,
+  );
+}
+
+function ribbonLegend(companies) {
+  const counts = companies
+    .map((company) => {
+      const coverage = coverageFor(company);
+      const valid = coverage?.quarters_with_E ?? usableRows(company).length;
+      const total = coverage?.quarters_in_panel ?? allQuarters().length;
+      return `${companyName(company)} ${valid}/${total}`;
+    })
+    .join(" · ");
+  return el(
+    "div",
+    { class: "ribbon-legend" },
     el(
-      "div",
-      {},
-      el("strong", { text: "Insufficient evidence — quality gate không đạt. " }),
+      "span",
+      { class: "ribbon-legend__item" },
       el("span", {
-        text: "Mô hình không beat naive/AR(1) trên backtest, nên các con số dưới đây KHÔNG được gắn nhãn forecast. Chúng chỉ hiển thị trong khối tham khảo thử nghiệm để kiểm toán.",
+        class: "ribbon-legend__swatch ribbon-legend__swatch--valid",
+        "aria-hidden": "true",
       }),
+      `Đã tính được E (${counts})`,
     ),
-  );
-}
-
-function pulseResultCard(result, pulse) {
-  const gatePassed = Boolean(result.quality_gate_passed);
-  const body = [];
-  const target = `${result.target_period} · h=${result.horizon}`;
-
-  if (gatePassed) {
-    body.push(
-      el(
-        "div",
-        { class: "pulse-card" },
-        el("span", { class: "kpi-label", text: result.horizon_label || target }),
-        el("span", { class: "pulse-value", text: fmtSigned(result.point, 3) }),
-        el("span", {
-          class: "pulse-interval",
-          text: `80% [${fmt(result.interval_low_80, 2)}; ${fmt(result.interval_high_80, 2)}] · 95% [${fmt(result.interval_low_95, 2)}; ${fmt(result.interval_high_95, 2)}]`,
-        }),
-        el("span", { class: "small", text: `as-of ${result.as_of_date} · model ${result.model_version}` }),
-      ),
-    );
-  } else {
-    body.push(
-      el(
-        "div",
-        { class: "experimental-block" },
-        el("p", { class: "small", text: "Không đủ bằng chứng để hiển thị point forecast." }),
-        el("p", { class: "small", text: `Lý do: ${result.reason || "quality_gate_not_passed"}` }),
-        el("p", { class: "mono", text: `Tham khảo (experimental): ${fmtSigned(result.point, 3)}` }),
-        el("p", {
-          class: "mono",
-          text: `80% [${fmt(result.interval_low_80, 2)}; ${fmt(result.interval_high_80, 2)}] · 95% [${fmt(result.interval_low_95, 2)}; ${fmt(result.interval_high_95, 2)}]`,
-        }),
-        el("p", { class: "small", text: `Phương pháp interval: ${result.interval_method} · n_train=${result.n_train}` }),
-      ),
-    );
-  }
-
-  if (result.attribution?.length) {
-    const maxAbs = Math.max(...result.attribution.map((d) => Math.abs(d.contribution) || 0), 0.0001);
-    body.push(
-      el(
-        "div",
-        {},
-        el("p", { class: "kpi-label", text: "Yếu tố đóng góp (không phải nhân quả)" }),
-        el(
-          "ul",
-          { class: "list-clean", style: "margin-top:8px" },
-          result.attribution.map((driver) =>
-            el(
-              "li",
-              {},
-              el(
-                "div",
-                { class: "driver", style: "width:100%" },
-                el("span", { text: driver.label }),
-                el("span", { class: "mono", text: fmtSigned(driver.contribution, 3) }),
-                el(
-                  "span",
-                  { class: "driver-bar" },
-                  el("span", {
-                    class: driver.contribution < 0 ? "down" : "",
-                    style: `width:${Math.round((Math.abs(driver.contribution) / maxAbs) * 100)}%`,
-                  }),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  return card({
-    title: `${result.company} · ${result.horizon === 0 ? "Nowcast" : "Forecast"}`,
-    sub: target,
-    badge: el("span", { class: `badge ${gatePassed ? "badge--info" : "badge--warn"}`, text: gatePassed ? "experimental forecast" : "insufficient evidence" }),
-    body,
-  });
-}
-
-function metricsTable(pulse) {
-  const metrics = pulse.metrics || {};
-  const rows = [];
-  for (const [horizon, groups] of Object.entries(metrics)) {
-    for (const [group, models] of Object.entries(groups)) {
-      for (const [model, m] of Object.entries(models)) {
-        rows.push([
-          `h=${horizon}`,
-          group,
-          model,
-          String(m.n),
-          fmt(m.mae, 3),
-          fmt(m.rmse, 3),
-          fmtPct(m.directional_accuracy),
-        ]);
-      }
-    }
-  }
-  if (!rows.length) return el("p", { class: "small", text: "Chưa có metric backtest." });
-  return table(
-    [
-      { label: "Horizon" },
-      { label: "Nhóm" },
-      { label: "Model" },
-      { label: "n", num: true },
-      { label: "MAE", num: true },
-      { label: "RMSE", num: true },
-      { label: "Directional", num: true },
-    ],
-    rows,
-    "Rolling-origin backtest; test chỉ để báo cáo, tuning nằm trong train.",
-  );
-}
-
-function coverageTable(pulse) {
-  const rows = (pulse.coverage || []).map((row) => [
-    `h=${row.horizon}`,
-    row.group,
-    row.model,
-    fmtPct(row.level, 0),
-    fmtPct(row.coverage),
-    String(row.n),
-  ]);
-  if (!rows.length) return el("p", { class: "small", text: "Chưa có empirical coverage." });
-  return table(
-    [
-      { label: "Horizon" },
-      { label: "Nhóm" },
-      { label: "Model" },
-      { label: "Mức", num: true },
-      { label: "Coverage", num: true },
-      { label: "n", num: true },
-    ],
-    rows,
-  );
-}
-
-function alertsTable(pulse) {
-  const alerts = pulse.alerts || [];
-  if (!alerts.length) return el("p", { class: "small", text: "Không có alert nào được đánh giá." });
-  const severityClass = { CRITICAL: "badge--danger", WARN: "badge--warn", INFO: "badge--info" };
-  return table(
-    [
-      { label: "Công ty" },
-      { label: "Kỳ" },
-      { label: "Rule" },
-      { label: "Severity" },
-      { label: "Trạng thái" },
-      { label: "Nội dung" },
-    ],
-    alerts.map((alert) => [
-      companyBadge(alert.company),
-      `${alert.target_period} · h=${alert.horizon}`,
-      el("span", { class: "mono", text: alert.rule_id }),
-      el("span", { class: `badge ${severityClass[alert.severity] || "badge--info"}`, text: alert.severity }),
-      el("span", { class: `badge ${alert.status === "open" ? "badge--danger" : alert.status === "suppressed" ? "badge--warn" : "badge--ok"}`, text: alert.status }),
-      el("span", { text: alert.message }),
-    ]),
-  );
-}
-
-function renderDsh07() {
-  const payload = state.payload;
-  if (!payload) return [renderEmpty("Chưa có payload dashboard.")];
-  const pulse = payload.pulse || {};
-  const nodes = [];
-
-  if (!pulse.available) {
-    nodes.push(renderEmpty("AICOR Pulse chưa chạy hoặc không khả dụng cho lần publish này."));
-    return nodes;
-  }
-
-  nodes.push(
     el(
-      "div",
-      { class: "grid grid--4" },
-      card({ title: "Trạng thái", sub: pulse.status, body: kpi("Gate", pulse.gate?.passed ? "PASS" : "FAIL", `Model ${pulse.model_id || "—"}`) }),
-      card({ title: "Model version", sub: pulse.model_version || "—", body: kpi("As-of", pulse.as_of_date || "—", `Origin ${pulse.forecast_origin || "—"}`) }),
-      card({
-        title: "Mẫu huấn luyện",
-        sub: `n = ${pulse.population?.n_samples ?? "—"}`,
-        body: kpi("Công ty", String(pulse.population?.n_companies ?? "—"), `Folds h0/h1: ${pulse.n_folds?.["0"] ?? "—"}/${pulse.n_folds?.["1"] ?? "—"}`),
+      "span",
+      { class: "ribbon-legend__item" },
+      el("span", {
+        class: "ribbon-legend__swatch ribbon-legend__swatch--warmup",
+        "aria-hidden": "true",
       }),
-      card({ title: "Run", sub: pulse.run_id || "—", body: kpi("Generated", relativeTime(pulse.generated_at), pulse.disclaimer) }),
+      "Chưa đủ 16 quý — chỉ dùng làm mốc so sánh",
     ),
   );
+}
 
-  nodes.push(gateBanner(pulse));
+/* ----------------------------------------------------------------- loading */
 
-  const results = (pulse.results || []).filter((r) => visibleCompanies().includes(r.company));
-  if (!results.length) {
-    nodes.push(renderEmpty("Không có kết quả Pulse cho bộ lọc hiện tại."));
+async function fetchManifest() {
+  const response = await fetch(`${DATA_DIR}manifest.json?ts=${Date.now()}`, {
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    throw new Error(`Không tải được manifest (HTTP ${response.status}).`);
+  }
+  return response.json();
+}
+
+async function fetchPayload(manifest) {
+  const response = await fetch(
+    `${DATA_DIR}${manifest.path}?v=${encodeURIComponent(manifest.dataset_version)}`,
+    { cache: "no-store" },
+  );
+  if (!response.ok) {
+    throw new Error(`Không tải được dữ liệu (HTTP ${response.status}).`);
+  }
+
+  const buffer = await response.arrayBuffer();
+  state.integrity = { state: "pending", note: "" };
+
+  if (globalThis.crypto?.subtle) {
+    const digest = await crypto.subtle.digest("SHA-256", buffer);
+    const hex = [...new Uint8Array(digest)]
+      .map((byte) => byte.toString(16).padStart(2, "0"))
+      .join("");
+    if (hex !== manifest.dataset_version) {
+      state.integrity = { state: "mismatch", note: hex };
+      throw new Error(
+        "Dữ liệu tải về không khớp mã băm đã công bố. Trang dừng hiển thị để tránh số liệu sai.",
+      );
+    }
+    state.integrity = { state: "verified", note: "" };
   } else {
-    nodes.push(el("div", { class: "grid grid--2" }, results.map((result) => pulseResultCard(result, pulse))));
+    state.integrity = {
+      state: "unavailable",
+      note: "Trình duyệt không cung cấp crypto.subtle trên kết nối này.",
+    };
   }
 
-  nodes.push(card({ title: "Backtest metrics", sub: "So sánh naive / AR(1) / ridge", body: [metricsTable(pulse)] }));
-  nodes.push(card({ title: "Empirical coverage", sub: "Tỷ lệ giá trị thực nằm trong interval", body: [coverageTable(pulse)] }));
-  nodes.push(
-    card({
-      title: "Alerts",
-      sub: "Chỉ đánh giá trên kết quả đã qua quality gate",
-      body: [alertsTable(pulse)],
-    }),
-  );
-
-  const modelCard = pulse.model_card || {};
-  nodes.push(
-    details(
-      "Model card & giới hạn",
-      el(
-        "div",
-        {},
-        el("p", { class: "small", text: modelCard.as_of_policy || "—" }),
-        el(
-          "ul",
-          { class: "list-clean", style: "margin-top:10px" },
-          (modelCard.limitations || []).map((item) => el("li", {}, el("span", { text: item }))),
-        ),
-        el("p", { class: "mono", style: "margin-top:10px", text: `artifact_hash ${modelCard.artifact_hash || "—"}` }),
-        el("p", { class: "small", text: `interval: ${modelCard.interval_method?.method || "—"}` }),
-      ),
-    ),
-  );
-
-  nodes.push(note(pulse.attribution_note || "", "warn"));
-  return nodes;
+  const text = new TextDecoder("utf-8").decode(buffer);
+  return JSON.parse(text);
 }
 
-const RENDERERS = {
-  "dsh-01": renderDsh01,
-  "dsh-02": renderDsh02,
-  "dsh-03": renderDsh03,
-  "dsh-04": renderDsh04,
-  "dsh-05": renderDsh05,
-  "dsh-06": renderDsh06,
-  "dsh-07": renderDsh07,
-};
+function applyMeta(current) {
+  document.documentElement.dataset.asOfQuarter = current?.meta?.as_of_quarter || "";
+}
 
-function renderCurrentView() {
-  const body = document.querySelector(`#${state.view} [data-view-body]`);
-  if (!body) return;
-  hideTooltip();
-  if (state.loading) {
-    body.replaceChildren(el("div", { class: "skeleton" }), el("div", { class: "skeleton" }));
-    return;
+async function loadData({ initial = false } = {}) {
+  const token = ++state.requestToken;
+  if (initial) {
+    state.loading = true;
+    renderAll();
   }
-  if (state.error) {
-    body.replaceChildren(renderEmpty(state.error));
-    return;
-  }
-  const renderer = RENDERERS[state.view];
+
   try {
-    body.replaceChildren(...renderer().flat().filter(Boolean));
+    const manifest = await fetchManifest();
+    const current = await fetchPayload(manifest);
+    if (token !== state.requestToken) return;
+
+    state.manifest = manifest;
+    state.payload = current;
+    state.lastGoodPayload = current;
+    state.error = null;
+    state.staleNote = null;
+    state.loading = false;
+    applyMeta(current);
+    renderAll();
   } catch (error) {
-    body.replaceChildren(renderEmpty(`Lỗi hiển thị: ${error.message}`));
+    if (token !== state.requestToken) return;
+    state.loading = false;
+    if (state.lastGoodPayload) {
+      state.payload = state.lastGoodPayload;
+      state.staleNote = "Không kiểm tra được bản mới. Đang hiển thị bản đã tải trước đó.";
+    } else {
+      state.error = error instanceof Error ? error.message : String(error);
+    }
+    renderAll();
   }
-}
-
-function renderAll() {
-  renderHeader();
-  renderBanners();
-  renderCurrentView();
-}
-
-/* ----------------------------------------------------------- navigation */
-
-function activateTab(view, { focus = false } = {}) {
-  if (!VIEWS.includes(view)) return;
-  state.view = view;
-  for (const candidate of VIEWS) {
-    const tab = document.getElementById(`tab-${candidate}`);
-    const panel = document.getElementById(candidate);
-    const active = candidate === view;
-    tab?.setAttribute("aria-selected", String(active));
-    tab?.setAttribute("tabindex", active ? "0" : "-1");
-    if (panel) panel.hidden = !active;
-  }
-  if (focus) document.getElementById(`tab-${view}`)?.focus();
-  renderCurrentView();
-  if (location.hash !== `#${view}`) history.replaceState(null, "", `#${view}`);
-}
-
-function setupNavigation() {
-  for (const view of VIEWS) {
-    const tab = document.getElementById(`tab-${view}`);
-    tab?.addEventListener("click", () => activateTab(view));
-    tab?.addEventListener("keydown", (event) => {
-      const index = VIEWS.indexOf(state.view);
-      let next = null;
-      if (event.key === "ArrowRight") next = VIEWS[(index + 1) % VIEWS.length];
-      if (event.key === "ArrowLeft") next = VIEWS[(index - 1 + VIEWS.length) % VIEWS.length];
-      if (event.key === "Home") next = VIEWS[0];
-      if (event.key === "End") next = VIEWS[VIEWS.length - 1];
-      if (next) {
-        event.preventDefault();
-        activateTab(next, { focus: true });
-      }
-    });
-  }
-
-  for (const button of document.querySelectorAll(".seg-btn")) {
-    button.addEventListener("click", () => {
-      const company = button.dataset.company;
-      state.company = company;
-      for (const peer of document.querySelectorAll(".seg-btn")) {
-        peer.setAttribute("aria-pressed", String(peer.dataset.company === company));
-      }
-      renderCurrentView();
-    });
-  }
-
-  document.getElementById("refresh-btn")?.addEventListener("click", () => loadData({ initial: true }));
-
-  // Deep links and the browser back button must select the matching view.
-  window.addEventListener("hashchange", () => {
-    const view = location.hash.replace("#", "");
-    if (VIEWS.includes(view) && view !== state.view) activateTab(view);
-  });
-
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") checkForUpdates();
-  });
 }
 
 async function checkForUpdates() {
+  if (document.hidden) return;
   try {
     const manifest = await fetchManifest();
     if (manifest.dataset_version !== state.manifest?.dataset_version) {
       await loadData();
+      return;
     }
-  } catch (error) {
-    // A transient polling failure should not blank a working dashboard.
-    console.warn("AICOR: manifest poll failed", error);
+    state.staleNote = null;
+    renderHeaderStatus();
+  } catch {
+    state.staleNote = "Không kiểm tra được bản mới. Đang hiển thị bản đã tải trước đó.";
+    renderHeaderStatus();
   }
 }
 
-function startPolling() {
-  if (state.pollTimer) clearInterval(state.pollTimer);
-  state.pollTimer = setInterval(checkForUpdates, POLL_INTERVAL_MS);
+/* ------------------------------------------------------------------ routing */
+
+function viewFromHash() {
+  const raw = (location.hash || "").replace(/^#/, "");
+  return VIEW_SET.has(raw) ? raw : "tong-quan";
 }
 
-/* ---------------------------------------------------------------- boot */
+function setView(view, { focus = false, updateHash = true } = {}) {
+  const next = VIEW_SET.has(view) ? view : "tong-quan";
+  state.view = next;
 
-function boot() {
-  setupNavigation();
-  const hash = location.hash.replace("#", "");
-  if (VIEWS.includes(hash)) {
-    state.view = hash;
+  for (const id of VIEWS) {
+    const section = document.getElementById(id);
+    if (section) section.hidden = id !== next;
   }
-  activateTab(state.view);
-  loadData({ initial: true }).then(startPolling);
+
+  for (const link of document.querySelectorAll(".toc-link[data-view]")) {
+    if (link.dataset.view === next) link.setAttribute("aria-current", "page");
+    else link.removeAttribute("aria-current");
+  }
+
+  if (updateHash && location.hash !== `#${next}`) {
+    history.pushState({ view: next }, "", `#${next}`);
+  }
+
+  renderActiveView();
+
+  if (focus) {
+    const heading = document.getElementById(`${next}-title`);
+    if (heading) heading.focus({ preventScroll: true });
+    window.scrollTo(0, 0);
+  }
 }
 
-boot();
+function syncFromLocation() {
+  const next = viewFromHash();
+  if (next !== state.view) setView(next, { focus: false, updateHash: false });
+}
+
+function bindNavigation() {
+  document.addEventListener("click", (event) => {
+    const link = event.target.closest("a[data-view]");
+    if (!link) return;
+    const view = link.dataset.view;
+    if (!VIEW_SET.has(view)) return;
+
+    event.preventDefault();
+    const tocMobile = document.getElementById("toc-mobile");
+    if (tocMobile) tocMobile.open = false;
+
+    if (view === state.view) {
+      if (location.hash !== `#${view}`) history.pushState({ view }, "", `#${view}`);
+      window.scrollTo(0, 0);
+      return;
+    }
+    setView(view, { focus: true });
+  });
+
+  window.addEventListener("hashchange", syncFromLocation);
+  window.addEventListener("popstate", syncFromLocation);
+}
+
+/* ------------------------------------------------------------- controls */
+
+function applyTheme(theme) {
+  state.theme = theme === "dark" ? "dark" : "light";
+  document.documentElement.dataset.theme = state.theme;
+
+  const button = document.getElementById("theme-toggle");
+  if (!button) return;
+  const dark = state.theme === "dark";
+  button.setAttribute("aria-pressed", String(dark));
+  const label = button.querySelector(".theme-toggle__label");
+  if (label) label.textContent = dark ? "Giao diện sáng" : "Giao diện tối";
+  button.setAttribute(
+    "aria-label",
+    dark ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối",
+  );
+}
+
+function initTheme() {
+  let stored = null;
+  try {
+    stored = localStorage.getItem("aicor-theme");
+  } catch {
+    stored = null;
+  }
+  applyTheme(stored === "dark" ? "dark" : "light");
+}
+
+function flashStatus(text) {
+  state.statusFlash = text;
+  if (state.flashTimer) clearTimeout(state.flashTimer);
+  state.flashTimer = setTimeout(() => {
+    state.statusFlash = null;
+    state.flashTimer = null;
+    renderHeaderStatus();
+  }, 4_000);
+  renderHeaderStatus();
+}
+
+async function handleRefresh() {
+  const button = document.getElementById("refresh-btn");
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Đang tải…";
+  }
+  await loadData();
+  if (button) {
+    button.disabled = false;
+    button.textContent = "Tải lại";
+  }
+  flashStatus(state.error ? "Không tải được bản mới" : "Đã kiểm tra bản mới");
+}
+
+function bindCompanyFilter() {
+  for (const button of document.querySelectorAll("[data-company]")) {
+    button.addEventListener("click", () => {
+      state.company = button.dataset.company;
+      for (const other of document.querySelectorAll("[data-company]")) {
+        other.setAttribute("aria-pressed", String(other === button));
+      }
+      renderActiveView();
+    });
+  }
+}
+
+function bindControls() {
+  const themeButton = document.getElementById("theme-toggle");
+  if (themeButton) {
+    themeButton.addEventListener("click", () => {
+      const next = state.theme === "dark" ? "light" : "dark";
+      applyTheme(next);
+      try {
+        localStorage.setItem("aicor-theme", next);
+      } catch {
+        /* storage may be blocked; the theme still applies for this page */
+      }
+    });
+  }
+
+  const refreshButton = document.getElementById("refresh-btn");
+  if (refreshButton) refreshButton.addEventListener("click", handleRefresh);
+  bindCompanyFilter();
+}
+
+/* ------------------------------------------------------------ shell renders */
+
+function integrityLabel() {
+  switch (state.integrity.state) {
+    case "verified":
+      return "Đã xác minh SHA-256";
+    case "unavailable":
+      return "Không xác minh được (thiếu crypto.subtle)";
+    case "mismatch":
+      return "Không khớp — đã dừng hiển thị";
+    default:
+      return "Đang xác minh";
+  }
+}
+
+function renderHeaderStatus() {
+  const node = document.getElementById("header-status");
+  if (!node) return;
+  node.classList.remove("status-line--ok", "status-line--warn", "status-line--danger");
+
+  if (state.loading) {
+    node.textContent = "Đang tải dữ liệu…";
+    return;
+  }
+  if (state.error) {
+    node.textContent = "Không tải được dữ liệu";
+    node.classList.add("status-line--danger");
+    return;
+  }
+  if (state.staleNote) {
+    node.textContent = "Không kiểm tra được bản mới · đang hiển thị bản đã tải";
+    node.classList.add("status-line--warn");
+    return;
+  }
+  if (state.statusFlash) {
+    node.textContent = state.statusFlash;
+    node.classList.add("status-line--ok");
+    return;
+  }
+
+  const published = state.payload?.meta?.generated_at || state.manifest?.published_at;
+  const age = ageHours(published);
+  if (age !== null && age > 24) {
+    node.textContent = `Bản mới nhất được xuất bản ${relativeTime(published)}`;
+    node.classList.add("status-line--warn");
+    return;
+  }
+  node.textContent = `Dữ liệu đầy đủ · cập nhật ${relativeTime(published)}`;
+  node.classList.add("status-line--ok");
+}
+
+function retryButton() {
+  return el("button", {
+    type: "button",
+    class: "btn btn--primary",
+    text: "Thử lại",
+    onclick: () => loadData({ initial: true }),
+  });
+}
+
+function renderBanner() {
+  const banner = document.getElementById("global-banner");
+  if (!banner) return;
+  banner.replaceChildren();
+  banner.className = "notice";
+  banner.hidden = true;
+
+  if (state.error) {
+    banner.className = "notice notice--danger";
+    banner.append(
+      el("p", { class: "notice__title", text: "Không tải được dữ liệu" }),
+      el("p", { class: "notice__body", text: state.error }),
+      el("div", { class: "notice__actions" }, retryButton()),
+    );
+    banner.hidden = false;
+    return;
+  }
+
+  const status = state.payload?.status;
+  if (status?.data_status && status.data_status !== "success") {
+    const incomplete = (status.recent_sync || []).filter(
+      (item) => item.status && item.status !== "success",
+    );
+    const names = [
+      ...new Set(
+        incomplete.map((item) =>
+          item.company === "ALL" ? "toàn bộ nguồn" : companyName(item.company),
+        ),
+      ),
+    ];
+    banner.className = "notice notice--warn";
+    banner.append(
+      el("p", { class: "notice__title", text: "Dữ liệu chưa đầy đủ" }),
+      el("p", {
+        class: "notice__body",
+        text: names.length
+          ? `Nguồn chưa hoàn tất: ${names.join(", ")}. Số liệu thiếu được hiển thị là thiếu, không quy về 0.`
+          : "Một phần nguồn dữ liệu chưa hoàn tất. Số liệu thiếu được hiển thị là thiếu, không quy về 0.",
+      }),
+    );
+    banner.hidden = false;
+  }
+}
+
+function renderFooterMeta() {
+  const node = document.getElementById("footer-meta");
+  if (!node) return;
+  if (!state.payload) {
+    node.textContent = "";
+    return;
+  }
+  const m = state.payload.meta;
+  node.textContent = [
+    `Bản ${m.run_id}`,
+    `xuất bản ${fmtDateTime(m.generated_at)}`,
+    m.config_version,
+    m.formula_version,
+    m.feature_set_version,
+    `dataset ${String(state.manifest?.dataset_version || "").slice(0, 12)}`,
+    integrityLabel(),
+  ].join(" · ");
+}
+
+function factList(pairs) {
+  const list = el("dl", { class: "glossary" });
+  for (const [term, value] of pairs) {
+    list.append(
+      el("dt", { text: term }),
+      el("dd", { text: value === null || value === undefined || value === "" ? "—" : value }),
+    );
+  }
+  return list;
+}
+
+function weightsTable(m) {
+  const weights = m.weights || {};
+  const labels = { baseline: "Baseline", simple: "Cân bằng", tech: "Ưu tiên sản phẩm" };
+  const rows = Object.entries(weights).map(([key, value]) => ({
+    key: labels[key] || key,
+    product: value.product,
+    trends: value.trends,
+  }));
+  return table({
+    caption: "Trọng số ba cách tính",
+    columns: [
+      { label: "Cách tính", key: "key" },
+      { label: "Sản phẩm", numeric: true, render: (row) => fmt(row.product, 1) },
+      { label: "Xu hướng", numeric: true, render: (row) => fmt(row.trends, 1) },
+    ],
+    rows,
+  });
+}
+
+function forecastParamsTable(forecast) {
+  if (!forecast) return el("p", { class: "card__sub", text: "Chưa có tham số dự báo." });
+  return table({
+    caption: "Tham số AICOR Pulse",
+    columns: [
+      { label: "Tham số", key: "label" },
+      { label: "Giá trị", key: "value" },
+    ],
+    rows: [
+      { label: "Mô hình", value: forecast.model },
+      { label: "Mục tiêu", value: forecast.target },
+      { label: "Chân trời", value: (forecast.horizons || []).join(", ") },
+      { label: "Cửa sổ hiệu chuẩn", value: `${forecast.conformal_window} điểm` },
+      {
+        label: "Mức khoảng",
+        value: (forecast.interval_levels || []).map((level) => fmtPct(level, 0)).join(" · "),
+      },
+      { label: "Mẫu huấn luyện tối thiểu", value: forecast.min_train_samples },
+    ],
+  });
+}
+
+function gateTable(gate) {
+  const rows = (gate.checks || []).map((row) => ({
+    ...row,
+    outcome: row.status === "pass" ? "Đạt" : "Chưa đạt",
+    tone: row.status === "pass" ? "pos" : "warn",
+  }));
+  return table({
+    caption: "Kết quả kiểm định theo chân trời",
+    columns: [
+      { label: "Chân trời", numeric: true, render: (row) => `h=${row.horizon}` },
+      { label: "MAE mô hình", numeric: true, render: (row) => fmt(row.model_mae, 3) },
+      { label: "MAE naive", numeric: true, render: (row) => fmt(row.naive_mae, 3) },
+      { label: "RMSE mô hình", numeric: true, render: (row) => fmt(row.model_rmse, 3) },
+      { label: "RMSE naive", numeric: true, render: (row) => fmt(row.naive_rmse, 3) },
+      { label: "n", numeric: true, render: (row) => fmt(row.n, 0) },
+      { label: "Kết quả", render: (row) => badge(row.outcome, row.tone) },
+    ],
+    rows,
+  });
+}
+
+function renderTechnical() {
+  const body = document.getElementById("technical-body");
+  if (!body) return;
+  body.replaceChildren();
+  if (!state.payload) return;
+
+  const m = state.payload.meta;
+  const currentStatus = state.payload.status || {};
+  const pulse = state.payload.pulse || {};
+
+  body.append(
+    el("p", {
+      text:
+        "Trình duyệt chỉ định dạng lại các giá trị đã publish. Mọi phép tính nghiên cứu diễn ra trong pipeline; trang này không tính lại E, không đổi trọng số và không hiệu chuẩn lại khoảng dự báo.",
+    }),
+  );
+
+  body.append(subheading("Bản dữ liệu"));
+  body.append(
+    factList([
+      ["Run ID", m.run_id],
+      ["Xuất bản", fmtDateTime(m.generated_at)],
+      ["Quý mới nhất", m.as_of_quarter],
+      ["Tệp manifest", state.manifest?.path],
+      ["SHA-256", state.manifest?.dataset_version],
+      ["Kiểm tra toàn vẹn", integrityLabel()],
+      ["config_version", m.config_version],
+      ["formula_version", m.formula_version],
+      ["feature_set_version", m.feature_set_version],
+    ]),
+  );
+  if (state.integrity.state === "unavailable") {
+    body.append(
+      el("p", {
+        class: "card__sub",
+        text: `Không xác minh được SHA-256: ${state.integrity.note} Trang vẫn hiển thị nhưng không có bảo đảm toàn vẹn từ trình duyệt.`,
+      }),
+    );
+  }
+
+  body.append(subheading("Trọng số và z-score"));
+  body.append(weightsTable(m));
+  body.append(el("p", { class: "card__sub", text: m.zscore?.method || "—" }));
+  if (m.zscore) {
+    body.append(
+      factList([
+        ["Cửa sổ z-score", `${m.zscore.window} quý`],
+        ["Số quý tối thiểu", `${m.zscore.min_quarters} quý`],
+        ["Số quan sát tối thiểu", m.zscore.min_observations],
+      ]),
+    );
+  }
+
+  body.append(subheading("Tham số dự báo"));
+  body.append(forecastParamsTable(m.forecast));
+
+  if (pulse.gate) {
+    body.append(subheading("Kiểm định chất lượng dự báo"));
+    body.append(
+      factList([
+        ["Trạng thái", pulse.gate.passed ? "Đã đạt" : "Chưa đạt"],
+        ["Lý do kỹ thuật", pulse.gate.reason || "—"],
+        ["Mô hình chính", pulse.gate.primary_model || "—"],
+        ["Mô hình so sánh", pulse.gate.baseline_model || "—"],
+        ["Yêu cầu cả hai chân trời", pulse.gate.require_both ? "Có" : "Không"],
+      ]),
+    );
+    body.append(gateTable(pulse.gate));
+  }
+
+  body.append(subheading("Nguồn và cách đọc"));
+  body.append(
+    el(
+      "ul",
+      { class: "plain-list" },
+      el("li", {
+        text: "Tier S: hồ sơ SEC (10-Q, 10-K) — nguồn chính cho R&D và doanh thu.",
+      }),
+      el("li", {
+        text: "Tier A/B: dữ liệu sản phẩm, xu hướng tìm kiếm và giá thị trường — dùng làm bối cảnh hoặc thành phần Out.",
+      }),
+      el("li", { text: "Tier C: tín hiệu yếu, chỉ dùng khi rubric cho phép." }),
+    ),
+  );
+  body.append(
+    factList([
+      ["In", m.methodology?.In],
+      ["Out", m.methodology?.Out],
+      ["E", m.methodology?.E],
+      ["Product Score", m.methodology?.product_score],
+      ["MA4Q", m.methodology?.ma4q],
+      ["Đơn vị", m.methodology?.units],
+      ["Thị trường", m.methodology?.market],
+      [
+        "z-score",
+        "Số lệch chuẩn so với trung bình 16 quý gần nhất của chính công ty đó.",
+      ],
+      ["Warm-up", "Các quý đầu chưa đủ 16 quý để chuẩn hoá; không dùng để tính E."],
+      [
+        "Conformal",
+        "Cách hiệu chỉnh khoảng dự báo từ sai số các kỳ trước; cần đủ số điểm hiệu chuẩn.",
+      ],
+      [
+        "Gate",
+        "Kiểm định bắt buộc: mô hình phải vượt cách dự báo đơn giản trên dữ liệu quá khứ.",
+      ],
+      ["Suppressed alert", "Cảnh báo bị chặn vì kết quả dự báo chưa đạt kiểm định."],
+    ]),
+  );
+
+  if (currentStatus.freshness?.note) {
+    body.append(subheading("Độ mới của dữ liệu"));
+    body.append(el("p", { class: "card__sub", text: currentStatus.freshness.note }));
+  }
+}
+
+function renderAll() {
+  renderHeaderStatus();
+  renderBanner();
+  renderFooterMeta();
+  renderTechnical();
+  renderActiveView();
+}
+
+function renderActiveView() {
+  hideTooltip();
+  const section = document.getElementById(state.view);
+  if (!section) return;
+  const body = section.querySelector("[data-view-body]");
+  if (!body) return;
+
+  body.replaceChildren();
+
+  if (state.error) {
+    body.append(
+      noticeBlock(
+        "danger",
+        "Không tải được dữ liệu",
+        state.error,
+        retryButton(),
+      ),
+    );
+    return;
+  }
+  if (!state.payload) {
+    body.append(el("p", { class: "skeleton", text: "Đang tải dữ liệu…" }));
+    return;
+  }
+
+  const renderer = RENDERERS[state.view];
+  if (renderer) renderer(body);
+}
+
+/* --------------------------------------------------------------- DSH-01 */
+
+function heroCard(company) {
+  const row = latestValidRow(company);
+  const info = companyMeta(company);
+  const node = el("article", {
+    class: `hero-card hero-card--${company.toLowerCase()}`,
+  });
+
+  const head = el("div", { class: "hero-card__head" });
+  head.append(
+    el(
+      "div",
+      {},
+      el("p", { class: "hero-company", text: companyName(company) }),
+      el("p", {
+        class: "hero-meta",
+        text: `${company}${info?.exchange ? ` · ${info.exchange}` : ""}`,
+      }),
+    ),
+    el("p", {
+      class: "hero-quarter",
+      text: row ? `Quý ${row.quarter}` : "Chưa có quý hợp lệ",
+    }),
+  );
+  node.append(head);
+
+  if (!row) {
+    node.append(
+      el("p", { class: "hero-value hero-value--zero", text: "—" }),
+      el("p", { class: "hero-sentence", text: "Chưa đủ dữ liệu để tính điểm E" }),
+      el("p", {
+        class: "card__sub",
+        text: reasonFromCoverage(company) || "Cần đủ 16 quý dữ liệu để chuẩn hoá.",
+      }),
+    );
+    return node;
+  }
+
+  const tone = row.E > 0.0005 ? "pos" : row.E < -0.0005 ? "neg" : "zero";
+  node.append(
+    el("p", { class: `hero-value hero-value--${tone}`, text: fmtSigned(row.E, 3) }),
+    el("p", { class: "hero-sentence", text: eSentence(row.E) }),
+  );
+
+  const deltaText =
+    isNum(row.E_delta_prev) && row.prev_quarter
+      ? `${fmtSigned(row.E_delta_prev, 3)} so với ${row.prev_quarter}`
+      : "Đây là quý hợp lệ đầu tiên";
+  node.append(el("p", { class: `delta ${deltaClass(row.E_delta_prev)}`.trim(), text: deltaText }));
+
+  if (row.robustness === "ROBUST") {
+    node.append(badge("Ổn định khi đổi cách tính", "pos"));
+  } else if (row.robustness === "SENSITIVE") {
+    node.append(badge("Thay đổi khi đổi cách tính", "warn"));
+  }
+  return node;
+}
+
+function formulaStrip(methodology) {
+  const items = [
+    { symbol: "In", text: methodology.In || "Đầu vào AI đo được." },
+    { symbol: "E = Out − In", text: methodology.E || "Hiệu số giữa đầu ra và đầu vào." },
+    { symbol: "Out", text: methodology.Out || "Đầu ra AI đo được." },
+  ];
+  return el(
+    "div",
+    { class: "formula-strip" },
+    items.map((item) =>
+      el(
+        "div",
+        { class: "formula-item" },
+        el("span", { class: "formula-symbol", text: item.symbol }),
+        el("p", { class: "formula-text", text: item.text }),
+      ),
+    ),
+  );
+}
+
+function overviewChartCard(companies) {
+  const quarters = allQuarters();
+  const first = firstValidIndex(companies);
+  const start = state.fullHistory ? 0 : first;
+  const windowQuarters = quarters.slice(start);
+  const maps = new Map(companies.map((company) => [company, rowMap(company)]));
+  const validCount = quarters.length - first;
+
+  const series = companies.map((company) => ({
+    name: companyName(company),
+    tone: company.toLowerCase(),
+    dash: "solid",
+    points: windowQuarters.map((quarter) => {
+      const row = maps.get(company).get(quarter);
+      return {
+        label: quarter,
+        value: isNum(row?.E) ? row.E : null,
+        note:
+          row && isNum(row.In) && isNum(row.Out)
+            ? `In ${fmt(row.In, 3)} · Out ${fmt(row.Out, 3)}`
+            : "Chưa đủ 16 quý để tính E",
+      };
+    }),
+    endLabel: company,
+  }));
+
+  const toggle =
+    first > 0
+      ? el("button", {
+          type: "button",
+          class: "btn btn--ghost",
+          id: "history-toggle",
+          "aria-pressed": String(state.fullHistory),
+          text: state.fullHistory
+            ? `Chỉ xem ${validCount} quý gần nhất`
+            : `Xem cả ${quarters.length} quý`,
+        })
+      : null;
+  if (toggle) {
+    toggle.addEventListener("click", () => {
+      state.fullHistory = !state.fullHistory;
+      renderActiveView();
+      document.getElementById("history-toggle")?.focus();
+    });
+  }
+
+  const sub = state.fullHistory
+    ? `Toàn bộ ${quarters.length} quý. Vùng gạch chéo là giai đoạn chưa đủ 16 quý để tính E.`
+    : validCount > 0
+      ? `${validCount} quý đã tính được E, từ ${quarters[first]} đến ${quarters[quarters.length - 1]}.`
+      : "Chưa có quý nào đủ 16 quý để tính E.";
+
+  const frame = chartFrame();
+  const node = card({
+    title: "Diễn biến điểm E",
+    sub,
+    actions: toggle,
+    body: [frame],
+  });
+
+  const band =
+    state.fullHistory && first > 0
+      ? {
+          fromIndex: 0,
+          toIndex: first - 1,
+          label: `${first} quý đầu chỉ dùng làm mốc so sánh`,
+          shortLabel: `${first} quý làm mốc`,
+        }
+      : null;
+
+  lineChart(frame, {
+    series,
+    ariaLabel: `Điểm E của ${companies.map((company) => companyName(company)).join(" và ")} theo quý`,
+    yLabel: "Điểm E (z-score)",
+    band,
+    valueDigits: 3,
+    height: 340,
+    emptyReason: "Cần ít nhất một quý đủ 16 quý dữ liệu để vẽ biểu đồ.",
+  });
+
+  return node;
+}
+
+function ribbonCard(companies) {
+  const quarters = allQuarters();
+  const body = el(
+    "div",
+    { class: "ribbon" },
+    companies.map((company) => ribbonRow(company)),
+    ribbonLegend(companies),
+  );
+  return card({
+    title: `${quarters.length} quý dữ liệu`,
+    sub: `Mỗi ô là một quý, từ ${quarters[0]} đến ${quarters[quarters.length - 1]}. Ô gạch chéo là giai đoạn chưa đủ 16 quý.`,
+    body: [body],
+  });
+}
+
+function rememberCard(companies) {
+  const warmup = firstValidIndex(companies);
+  return card({
+    title: "Ba điều cần nhớ",
+    body: [
+      el(
+        "ul",
+        { class: "plain-list" },
+        el("li", { text: "Điểm E là chỉ số tương đối, không phải lợi nhuận hay tỷ lệ hoàn vốn." }),
+        el("li", {
+          text: "Kết quả có thể đổi khi chia trọng số khác nhau giữa sản phẩm và xu hướng tìm kiếm.",
+        }),
+        el("li", {
+          text:
+            warmup > 0
+              ? `${warmup} quý đầu chỉ là giai đoạn warm-up; chúng chưa đủ 16 quý để chuẩn hoá.`
+              : "Mọi quý trong khung dữ liệu đều đã đủ 16 quý để chuẩn hoá.",
+        }),
+      ),
+    ],
+  });
+}
+
+function overviewTableCard(companies) {
+  const rows = [];
+  for (const company of companies) {
+    for (const row of usableRows(company).slice(-12).reverse()) {
+      rows.push({ ...row, company });
+    }
+  }
+  rows.sort(
+    (left, right) =>
+      right.quarter.localeCompare(left.quarter) ||
+      COMPANY_IDS.indexOf(left.company) - COMPANY_IDS.indexOf(right.company),
+  );
+
+  return detailsBlock(
+    "Bảng số liệu 12 quý gần nhất",
+    table({
+      caption: "Đầu vào, đầu ra và điểm E theo quý",
+      columns: [
+        { label: "Công ty", key: "company" },
+        { label: "Quý", key: "quarter" },
+        { label: "In", numeric: true, render: (row) => fmt(row.In, 3) },
+        { label: "Out", numeric: true, render: (row) => fmt(row.Out, 3) },
+        { label: "E", numeric: true, render: (row) => fmtSigned(row.E, 3) },
+        { label: "Trạng thái", render: (row) => statusBadge(row.status) },
+        { label: "Nguồn", render: (row) => sourceLink(row) },
+      ],
+      rows,
+    }),
+  );
+}
+
+function renderOverview(root) {
+  const companies = visibleCompanies();
+  root.append(el("div", { class: "hero-grid" }, companies.map((company) => heroCard(company))));
+  root.append(formulaStrip(meta().methodology || {}));
+  root.append(overviewChartCard(companies));
+  root.append(ribbonCard(companies));
+  root.append(rememberCard(companies));
+  root.append(
+    linkTo("#dau-vao-dau-ra", "dau-vao-dau-ra", "Xem đầu vào và đầu ra →"),
+  );
+  root.append(overviewTableCard(companies));
+}
+
+/* --------------------------------------------------------------- DSH-02 */
+
+function ioRows(company) {
+  return seriesFor(company).filter((row) => isNum(row.In) || isNum(row.Out));
+}
+
+function ioCard(company, rows) {
+  const frame = chartFrame();
+  const methodology = meta().methodology || {};
+  const series = [
+    {
+      name: "In",
+      tone: "trends",
+      dash: "dashed",
+      points: rows.map((row) => ({
+        label: row.quarter,
+        value: isNum(row.In) ? row.In : null,
+        note: isNum(row.rd_expense) ? `R&D ${fmt(row.rd_expense, 0)} triệu USD` : null,
+      })),
+      endLabel: "In",
+    },
+    {
+      name: "Out",
+      tone: "teal",
+      dash: "solid",
+      points: rows.map((row) => ({
+        label: row.quarter,
+        value: isNum(row.Out) ? row.Out : null,
+        note:
+          isNum(row.product_ma4q) && isNum(row.trends_ma4q)
+            ? `Sản phẩm ${fmt(row.product_ma4q, 3)} · Xu hướng ${fmt(row.trends_ma4q, 3)}`
+            : null,
+      })),
+      endLabel: "Out",
+    },
+  ];
+
+  const node = card({
+    title: `${companyName(company)} — Đầu vào và đầu ra`,
+    sub: "Cùng thang đo z-score. Đường nét đứt là In; đường liền là Out.",
+    body: [
+      frame,
+      el("p", { class: "card__sub", text: methodology.In || "In là đầu vào AI đo được." }),
+      el("p", { class: "card__sub", text: methodology.Out || "Out là đầu ra AI đo được." }),
+    ],
+  });
+
+  lineChart(frame, {
+    series,
+    ariaLabel: `Đầu vào và đầu ra của ${companyName(company)} theo quý`,
+    yLabel: "z-score",
+    valueDigits: 3,
+    height: 320,
+    emptyReason: reasonFromCoverage(company),
+  });
+
+  return node;
+}
+
+function outComponentsCard(company, rows) {
+  const frame = chartFrame();
+  const series = [
+    {
+      name: "Sản phẩm (MA4Q)",
+      tone: "product",
+      dash: "solid",
+      points: rows.map((row) => ({
+        label: row.quarter,
+        value: isNum(row.z_product_ma4q) ? row.z_product_ma4q : null,
+        note: isNum(row.product_ma4q) ? `Product MA4Q ${fmt(row.product_ma4q, 3)}` : null,
+      })),
+      endLabel: "Sản phẩm",
+    },
+    {
+      name: "Xu hướng (MA4Q)",
+      tone: "trends",
+      dash: "dashed",
+      points: rows.map((row) => ({
+        label: row.quarter,
+        value: isNum(row.z_trends_ma4q) ? row.z_trends_ma4q : null,
+        note: isNum(row.trends_ma4q) ? `Trends MA4Q ${fmt(row.trends_ma4q, 3)}` : null,
+      })),
+      endLabel: "Xu hướng",
+    },
+  ];
+
+  const node = card({
+    title: `${companyName(company)} — Thành phần của Out`,
+    sub: "Hai thành phần được cộng có trọng số để tạo Out.",
+    body: [frame],
+  });
+
+  lineChart(frame, {
+    series,
+    ariaLabel: `Hai thành phần của Out cho ${companyName(company)}`,
+    yLabel: "z-score",
+    valueDigits: 3,
+    height: 300,
+    emptyReason: reasonFromCoverage(company),
+  });
+
+  return node;
+}
+
+function ioTable(company, rows) {
+  const recent = rows.slice(-8).reverse();
+  if (!recent.length) {
+    return detailsBlock(
+      `Bảng số liệu — ${companyName(company)}`,
+      emptyState("Chưa có dữ liệu cho mục này", reasonFromCoverage(company)),
+    );
+  }
+  return detailsBlock(
+    `Bảng 8 quý gần nhất — ${companyName(company)}`,
+    table({
+      caption: "Đầu vào, đầu ra và hai thành phần của Out",
+      columns: [
+        { label: "Quý", key: "quarter" },
+        { label: "In", numeric: true, render: (row) => fmt(row.In, 3) },
+        { label: "Out", numeric: true, render: (row) => fmt(row.Out, 3) },
+        {
+          label: "Sản phẩm (z)",
+          numeric: true,
+          render: (row) => fmt(row.z_product_ma4q, 3),
+        },
+        {
+          label: "Xu hướng (z)",
+          numeric: true,
+          render: (row) => fmt(row.z_trends_ma4q, 3),
+        },
+        { label: "Nguồn", render: (row) => sourceLink(row) },
+      ],
+      rows: recent,
+    }),
+  );
+}
+
+function renderInputsOutputs(root) {
+  const companies = visibleCompanies();
+  for (const company of companies) {
+    const rows = ioRows(company);
+    root.append(ioCard(company, rows));
+    root.append(outComponentsCard(company, rows));
+    root.append(ioTable(company, rows));
+  }
+}
+
+/* --------------------------------------------------------------- DSH-03 */
+
+function filteredEvents() {
+  const companies = new Set(visibleCompanies());
+  return (state.payload?.events || [])
+    .filter((event) => companies.has(event.company))
+    .filter((event) => {
+      if (state.eventFilter === "ALL") return true;
+      if (state.eventFilter === "C") return event.category === "C";
+      return event.category === "A" || event.category === "B";
+    })
+    .sort(
+      (left, right) =>
+        String(right.date || "").localeCompare(String(left.date || "")) ||
+        String(left.company).localeCompare(String(right.company)),
+    );
+}
+
+function eventFilterControls() {
+  const options = [
+    { value: "AB", label: "Sự kiện chính (A + B)" },
+    { value: "ALL", label: "Tất cả" },
+    { value: "C", label: "Nghiên cứu (C)" },
+  ];
+  const group = el("div", {
+    class: "chip-group",
+    role: "group",
+    "aria-label": "Loại sự kiện",
+  });
+
+  for (const option of options) {
+    const button = el("button", {
+      type: "button",
+      class: "chip",
+      "data-event-filter": option.value,
+      "aria-pressed": String(state.eventFilter === option.value),
+      text: option.label,
+    });
+    button.addEventListener("click", () => {
+      state.eventFilter = option.value;
+      state.eventsLimit = 12;
+      renderActiveView();
+      document.querySelector(`[data-event-filter="${option.value}"]`)?.focus();
+    });
+    group.append(button);
+  }
+  return group;
+}
+
+function eventItem(event) {
+  return el(
+    "li",
+    { class: "event-item" },
+    el("p", { class: "event-date", text: fmtDate(event.date) }),
+    el(
+      "div",
+      {},
+      el(
+        "p",
+        { class: "event-meta" },
+        el("span", {
+          class: `category-tag category-tag--${String(event.category).toLowerCase()}`,
+          text: categoryLabel(event.category),
+        }),
+        `${event.company} · ${statusLabel(event.review_status)}`,
+      ),
+      el("h3", { class: "event-title", text: event.name || "Sự kiện không có tiêu đề" }),
+      event.description
+        ? el("p", { class: "event-desc", text: event.description })
+        : null,
+      el(
+        "p",
+        { class: "event-source" },
+        externalLink(event.source_url, "Nguồn gốc"),
+      ),
+    ),
+  );
+}
+
+function productScoreCard(company) {
+  const rows = seriesFor(company).filter((row) => isNum(row.product_score)).slice(-12);
+  const frame = chartFrame();
+  const node = card({
+    title: `${companyName(company)} — Product Score theo quý`,
+    sub: "Product Score = 3×A + 2×B + 1×C. Cột càng cao càng nhiều tín hiệu sản phẩm trong quý.",
+    body: [frame],
+  });
+  barChart(frame, {
+    points: rows.map((row) => ({
+      label: row.quarter,
+      value: row.product_score,
+      note: "Product Score = 3×A + 2×B + 1×C",
+    })),
+    ariaLabel: `Product Score của ${companyName(company)} theo quý`,
+    valueLabel: "Product Score",
+    tone: company.toLowerCase(),
+    valueDigits: 0,
+    signed: false,
+    height: 280,
+    emptyReason: reasonFromCoverage(company),
+  });
+  return node;
+}
+
+function eventTable(events) {
+  return detailsBlock(
+    "Bảng sự kiện đầy đủ",
+    table({
+      caption: "Sự kiện AI và trạng thái duyệt",
+      columns: [
+        { label: "Ngày", render: (event) => fmtDate(event.date) },
+        { label: "Công ty", key: "company" },
+        { label: "Loại", render: (event) => categoryLabel(event.category) },
+        { label: "Tiêu đề", key: "name" },
+        { label: "Trạng thái duyệt", render: (event) => statusLabel(event.review_status) },
+        { label: "Nguồn", render: (event) => externalLink(event.source_url, "Mở") },
+      ],
+      rows: events,
+    }),
+  );
+}
+
+function renderEvents(root) {
+  const events = filteredEvents();
+  const shown = events.slice(0, state.eventsLimit);
+
+  root.append(
+    el(
+      "div",
+      { class: "event-controls" },
+      el("p", { class: "tile__label", text: "Loại sự kiện" }),
+      eventFilterControls(),
+    ),
+  );
+
+  root.append(
+    el("p", {
+      class: "card__sub",
+      text: `${events.length} sự kiện phù hợp. Đang hiển thị ${shown.length}.`,
+    }),
+  );
+
+  if (shown.length) {
+    root.append(el("ul", { class: "timeline" }, shown.map((event) => eventItem(event))));
+  } else {
+    root.append(
+      emptyState(
+        "Chưa có sự kiện phù hợp",
+        "Thử chọn “Tất cả” hoặc đổi bộ lọc công ty.",
+      ),
+    );
+  }
+
+  if (events.length > state.eventsLimit) {
+    const more = el("button", {
+      type: "button",
+      class: "btn btn--ghost",
+      text: `Xem thêm ${Math.min(12, events.length - state.eventsLimit)} sự kiện`,
+    });
+    more.addEventListener("click", () => {
+      state.eventsLimit += 12;
+      renderActiveView();
+      document.querySelector("[data-event-more]")?.focus();
+    });
+    more.dataset.eventMore = "true";
+    root.append(el("div", { class: "notice__actions" }, more));
+  }
+
+  for (const company of visibleCompanies()) {
+    root.append(productScoreCard(company));
+  }
+
+  root.append(eventTable(events));
+}
+
+/* --------------------------------------------------------------- DSH-04 */
+
+function splitLabel(key, fallback) {
+  const weights = meta().weights?.[key];
+  if (!weights) return fallback;
+  return `${fallback} ${fmt(weights.product, 1)} / ${fmt(weights.trends, 1)}`;
+}
+
+function robustnessSeries(company, rows) {
+  return [
+    {
+      name: splitLabel("baseline", "Baseline"),
+      tone: "baseline",
+      dash: "solid",
+      points: rows.map((row) => ({
+        label: row.quarter,
+        value: isNum(row.E) ? row.E : null,
+        note: row.status === "ok" ? null : statusLabel(row.status),
+      })),
+      endLabel: "Baseline",
+    },
+    {
+      name: splitLabel("simple", "Cân bằng"),
+      tone: "simple",
+      dash: "dashed",
+      points: rows.map((row) => ({
+        label: row.quarter,
+        value: isNum(row.E_simple) ? row.E_simple : null,
+        note: row.E_simple_status === "ok" ? null : statusLabel(row.E_simple_status),
+      })),
+      endLabel: "Cân bằng",
+    },
+    {
+      name: splitLabel("tech", "Ưu tiên sản phẩm"),
+      tone: "tech",
+      dash: "dotted",
+      points: rows.map((row) => ({
+        label: row.quarter,
+        value: isNum(row.E_tech) ? row.E_tech : null,
+        note: row.E_tech_status === "ok" ? null : statusLabel(row.E_tech_status),
+      })),
+      endLabel: "Ưu tiên SP",
+    },
+  ];
+}
+
+function agreementSentence(company) {
+  const rows = usableRows(company).filter((row) =>
+    [row.E, row.E_simple, row.E_tech].every(isNum),
+  );
+  if (!rows.length) return "Chưa đủ dữ liệu để so sánh ba cách tính.";
+  let agree = 0;
+  for (const row of rows) {
+    const signs = new Set(
+      [row.E, row.E_simple, row.E_tech].map((value) =>
+        value > 0.0005 ? 1 : value < -0.0005 ? -1 : 0,
+      ),
+    );
+    if (signs.size === 1) agree += 1;
+  }
+  return `Ba cách tính cùng dấu ở ${agree}/${rows.length} quý.`;
+}
+
+function robustnessTable(company) {
+  const rows = usableRows(company).slice().reverse();
+  if (!rows.length) {
+    return detailsBlock(
+      `Bảng số liệu — ${companyName(company)}`,
+      emptyState("Chưa có dữ liệu cho mục này", reasonFromCoverage(company)),
+    );
+  }
+
+  const combinedStatus = (row) => {
+    const statuses = [row.status, row.E_simple_status, row.E_tech_status].filter(
+      (status) => status && status !== "ok",
+    );
+    if (!statuses.length) return statusBadge("ok");
+    return badge([...new Set(statuses.map(statusLabel))].join(" · "), "warn");
+  };
+
+  return detailsBlock(
+    `Bảng số liệu — ${companyName(company)}`,
+    table({
+      caption: "Ba cách tính điểm E theo quý",
+      columns: [
+        { label: "Quý", key: "quarter" },
+        { label: "Baseline", numeric: true, render: (row) => fmtSigned(row.E, 3) },
+        {
+          label: "Cân bằng",
+          numeric: true,
+          render: (row) => fmtSigned(row.E_simple, 3),
+        },
+        {
+          label: "Ưu tiên sản phẩm",
+          numeric: true,
+          render: (row) => fmtSigned(row.E_tech, 3),
+        },
+        { label: "Trạng thái", render: combinedStatus },
+      ],
+      rows,
+    }),
+  );
+}
+
+function renderRobustness(root) {
+  root.append(
+    card({
+      title: "Ba cách chia trọng số",
+      sub: "Nếu cả ba cách cho cùng một dấu, hướng của E được xem là ổn định. Ổn định không phải kiểm định thống kê.",
+      body: [
+        el(
+          "ul",
+          { class: "plain-list" },
+          el("li", { text: `Baseline — sản phẩm ${fmt(meta().weights?.baseline?.product, 1)} / xu hướng ${fmt(meta().weights?.baseline?.trends, 1)}` }),
+          el("li", { text: `Cân bằng — sản phẩm ${fmt(meta().weights?.simple?.product, 1)} / xu hướng ${fmt(meta().weights?.simple?.trends, 1)}` }),
+          el("li", { text: `Ưu tiên sản phẩm — sản phẩm ${fmt(meta().weights?.tech?.product, 1)} / xu hướng ${fmt(meta().weights?.tech?.trends, 1)}` }),
+        ),
+      ],
+    }),
+  );
+
+  for (const company of visibleCompanies()) {
+    const rows = usableRows(company);
+    const frame = chartFrame();
+    root.append(
+      card({
+        title: `${companyName(company)} — Độ vững theo cách tính`,
+        sub: "Ba đường đọc trực tiếp từ payload; trình duyệt không cộng trừ hay đổi trọng số.",
+        body: [
+          frame,
+          el("p", { class: "hero-sentence", text: agreementSentence(company) }),
+        ],
+      }),
+    );
+    lineChart(frame, {
+      series: robustnessSeries(company, rows),
+      ariaLabel: `Ba cách tính điểm E cho ${companyName(company)}`,
+      yLabel: "Điểm E (z-score)",
+      valueDigits: 3,
+      height: 320,
+      emptyReason: reasonFromCoverage(company),
+    });
+    root.append(robustnessTable(company));
+  }
+}
+
+/* --------------------------------------------------------------- DSH-05 */
+
+function syncTone(status) {
+  if (status === "success") return "pos";
+  if (status === "partial") return "warn";
+  if (status) return "neg";
+  return "neutral";
+}
+
+function coverageCard(companies) {
+  const body = el(
+    "div",
+    { class: "ribbon" },
+    companies.map((company) => ribbonRow(company)),
+    ribbonLegend(companies),
+  );
+  return card({
+    title: "Độ phủ dữ liệu",
+    sub: "Ô đậm là quý đã tính được E; ô gạch chéo là quý chưa đủ 16 quý.",
+    body: [
+      body,
+      el("p", {
+        class: "card__sub",
+        text: coverageReasonSentence(companies),
+      }),
+    ],
+  });
+}
+
+function recentSyncCard() {
+  const rows = (state.payload?.status?.recent_sync || []).slice(0, 8);
+  if (!rows.length) {
+    return card({
+      title: "Nguồn gần nhất",
+      body: [emptyState("Chưa có lần đồng bộ nào")],
+    });
+  }
+  return card({
+    title: "Nguồn gần nhất",
+    sub: "Tám lần đồng bộ gần nhất, mới nhất trước.",
+    body: [
+      table({
+        caption: "Trạng thái đồng bộ nguồn dữ liệu",
+        columns: [
+          { label: "Nguồn", key: "source_type" },
+          { label: "Công ty", key: "company" },
+          {
+            label: "Trạng thái",
+            render: (row) => badge(statusLabel(row.status), syncTone(row.status)),
+          },
+          { label: "Hoàn tất", render: (row) => fmtDateTime(row.finished_at) },
+          {
+            label: "Bản ghi",
+            numeric: true,
+            render: (row) => fmt(row.records_fetched, 0),
+          },
+          { label: "Lỗi", render: (row) => row.error_message || "—" },
+        ],
+        rows,
+      }),
+    ],
+  });
+}
+
+function provenanceBlock() {
+  const rows = (state.payload?.status?.provenance || []).slice(-12).reverse();
+  if (!rows.length) {
+    return detailsBlock(
+      "Nguồn gốc hồ sơ SEC",
+      emptyState("Chưa có hồ sơ nguồn"),
+    );
+  }
+  return detailsBlock(
+    "Nguồn gốc hồ sơ SEC",
+    table({
+      caption: "Mười hai hồ sơ gần nhất và trạng thái xác minh",
+      columns: [
+        { label: "Mã nguồn", key: "source_id" },
+        { label: "Biểu mẫu", key: "form" },
+        { label: "Ngày nộp", render: (row) => fmtDate(row.filing_date) },
+        {
+          label: "Xác minh",
+          render: (row) =>
+            badge(
+              statusLabel(row.verification_status),
+              row.verification_status === "verified" ? "pos" : "warn",
+            ),
+        },
+        { label: "Liên kết", render: (row) => externalLink(row.source_url, "SEC") },
+      ],
+      rows,
+    }),
+  );
+}
+
+function renderSources(root) {
+  const companies = visibleCompanies();
+  const coverage = state.payload?.status?.coverage || {};
+  const freshness = state.payload?.status?.freshness || {};
+  const status = state.payload?.status || {};
+
+  const coverageValues = [
+    ...new Set(
+      companies.map((company) => {
+        const item = coverage[company] || {};
+        return `${item.quarters_with_E ?? 0} / ${item.quarters_in_panel ?? 0}`;
+      }),
+    ),
+  ];
+
+  root.append(
+    el(
+      "div",
+      { class: "tile-grid" },
+      tile({
+        label: "Quý mới nhất",
+        value: meta().as_of_quarter || "—",
+        note: "Dữ liệu tính đến cuối quý",
+      }),
+      tile({
+        label: "Xuất bản",
+        value: fmtDateTime(meta().generated_at),
+        note: relativeTime(meta().generated_at),
+      }),
+      tile({
+        label: "Đồng bộ gần nhất",
+        value: statusLabel(status.data_status),
+        note: freshness.last_source_sync_at
+          ? fmtDateTime(freshness.last_source_sync_at)
+          : "Chưa có thời điểm đồng bộ",
+      }),
+      tile({
+        label: "Số quý có E",
+        value: coverageValues.join(" · ") || "—",
+        note: companies.map((company) => companyName(company)).join(" và "),
+      }),
+    ),
+  );
+
+  root.append(coverageCard(companies));
+  root.append(recentSyncCard());
+  root.append(provenanceBlock());
+  root.append(
+    el("p", {
+      class: "card__sub",
+      text:
+        freshness.note ||
+        "Không có cam kết cập nhật theo giờ. Mỗi lần pipeline chạy sẽ tạo một bản mới.",
+    }),
+  );
+}
+
+/* --------------------------------------------------------------- DSH-06 */
+
+function marketRows(company) {
+  return (state.payload?.market?.[company] || []).filter((row) => isNum(row.adj_close));
+}
+
+function marketTable(company, rows) {
+  return detailsBlock(
+    `Bảng giá theo quý — ${companyName(company)}`,
+    table({
+      caption: "Giá đóng cửa điều chỉnh trung bình trong quý",
+      columns: [
+        { label: "Quý", key: "quarter" },
+        { label: "Giá TB (USD)", numeric: true, render: (row) => fmtMoney(row.adj_close) },
+        {
+          label: "Khối lượng",
+          numeric: true,
+          render: (row) => fmtCompact(row.volume),
+        },
+      ],
+      rows: rows.slice().reverse(),
+    }),
+  );
+}
+
+function renderMarket(root) {
+  const companies = visibleCompanies();
+  const withData = companies.filter((company) => marketRows(company).length);
+
+  if (!withData.length) {
+    root.append(
+      emptyState(
+        "Chưa có dữ liệu thị trường",
+        "Bản publish này không kèm chuỗi giá cho công ty đang chọn.",
+      ),
+    );
+    return;
+  }
+
+  for (const company of withData) {
+    const rows = marketRows(company);
+    const frame = chartFrame();
+    root.append(
+      card({
+        title: `Giá đóng cửa điều chỉnh trung bình trong quý — ${companyName(company)} (${company})`,
+        sub: "Giá cổ phiếu chỉ để tham khảo; không được dùng trong công thức E. Nhà cung cấp có thể điều chỉnh lại số liệu.",
+        body: [frame],
+      }),
+    );
+    lineChart(frame, {
+      series: [
+        {
+          name: "Giá TB",
+          tone: company.toLowerCase(),
+          dash: "solid",
+          points: rows.map((row) => ({
+            label: row.quarter,
+            value: row.adj_close,
+            note: isNum(row.volume) ? `Khối lượng ${fmtCompact(row.volume)}` : null,
+          })),
+          endLabel: company,
+          signed: false,
+        },
+      ],
+      ariaLabel: `Giá đóng cửa điều chỉnh trung bình trong quý của ${companyName(company)}`,
+      yLabel: "USD",
+      valueDigits: 2,
+      height: 300,
+      emptyReason: "Chưa có chuỗi giá cho công ty này.",
+    });
+    root.append(marketTable(company, rows));
+  }
+}
+
+/* --------------------------------------------------------------- DSH-07 */
+
+function gateBanner(pulse) {
+  const gate = pulse?.gate;
+  if (!pulse?.available || !gate) {
+    return noticeBlock(
+      "info",
+      "Chưa có backtest để áp dụng kiểm định.",
+      "Khi pipeline chưa publish kết quả backtest, mục này không đưa ra dự báo.",
+    );
+  }
+  if (gate.passed) {
+    return noticeBlock(
+      "info",
+      "Mô hình đã vượt cách dự báo đơn giản trong backtest.",
+      "Kết quả vẫn là thử nghiệm, không phải khuyến nghị đầu tư.",
+    );
+  }
+  return noticeBlock(
+    "danger",
+    "Chưa đủ tin cậy để đưa ra dự báo.",
+    "Mô hình thử nghiệm chưa vượt được cách dự báo đơn giản nhất trên dữ liệu quá khứ.",
+  );
+}
+
+function fmtRange(low, high) {
+  if (!isNum(low) || !isNum(high)) return "—";
+  return `[${fmt(low, 3)}; ${fmt(high, 3)}]`;
+}
+
+function foldSummary(nFolds) {
+  if (isNum(nFolds)) {
+    return { value: fmt(nFolds, 0), note: "n_folds" };
+  }
+  if (nFolds && typeof nFolds === "object") {
+    const entries = Object.entries(nFolds).filter(([, count]) => isNum(count));
+    if (entries.length) {
+      return {
+        value: entries.map(([, count]) => fmt(count, 0)).join(" · "),
+        note: entries.map(([horizon]) => `h=${horizon}`).join(" · "),
+      };
+    }
+  }
+  return { value: "—", note: "n_folds" };
+}
+
+function forecastSummaryTiles(pulse) {
+  const results = pulse.results || [];
+  const trainSizes = [...new Set(results.map((row) => row.n_train).filter(isNum))];
+  const trainLabel = trainSizes.length
+    ? trainSizes.length === 1
+      ? fmt(trainSizes[0], 0)
+      : `${fmt(Math.min(...trainSizes), 0)}–${fmt(Math.max(...trainSizes), 0)}`
+    : "—";
+  const folds = foldSummary(pulse.n_folds);
+
+  return el(
+    "div",
+    { class: "tile-grid" },
+    tile({
+      label: "Trạng thái",
+      value: pulse.gate
+        ? pulse.gate.passed
+          ? "Đã đạt kiểm định"
+          : "Chưa đạt kiểm định"
+        : "Chưa có kiểm định",
+      note: "AICOR Pulse · thử nghiệm",
+    }),
+    tile({
+      label: "Số vòng backtest",
+      value: folds.value,
+      note: folds.note,
+    }),
+    tile({
+      label: "Mẫu huấn luyện",
+      value: trainLabel,
+      note: "n_train",
+    }),
+    tile({
+      label: "Quý gốc",
+      value: pulse.forecast_origin || "—",
+      note: pulse.as_of_date ? `Tính đến ${fmtDate(pulse.as_of_date)}` : null,
+    }),
+  );
+}
+
+function forecastCard(result) {
+  const tone = result.point > 0.0005 ? "pos" : result.point < -0.0005 ? "neg" : "zero";
+  return card({
+    title: `${result.company} — ${result.target_period}`,
+    sub: result.horizon_label || `Chân trời h=${result.horizon}`,
+    body: [
+      el("p", { class: `hero-value hero-value--${tone}`, text: fmtSigned(result.point, 3) }),
+      factList([
+        ["Khoảng 80%", fmtRange(result.interval_low_80, result.interval_high_80)],
+        ["Khoảng 95%", fmtRange(result.interval_low_95, result.interval_high_95)],
+        ["Tính đến", fmtDate(result.as_of_date)],
+        ["Phiên bản mô hình", result.model_version],
+      ]),
+      el("p", { class: "card__sub", text: "Không phải khuyến nghị đầu tư." }),
+    ],
+  });
+}
+
+function forecastAuditBlock(results) {
+  return detailsBlock(
+    "Số liệu tham khảo cho kiểm toán",
+    table({
+      caption: "Không phải dự báo — chỉ dùng để kiểm toán.",
+      columns: [
+        { label: "Công ty", key: "company" },
+        { label: "Kỳ đích", key: "target_period" },
+        { label: "Chân trời", numeric: true, render: (row) => `h=${row.horizon}` },
+        { label: "Điểm", numeric: true, render: (row) => fmtSigned(row.point, 3) },
+        {
+          label: "Khoảng 80%",
+          numeric: true,
+          render: (row) => fmtRange(row.interval_low_80, row.interval_high_80),
+        },
+        {
+          label: "Khoảng 95%",
+          numeric: true,
+          render: (row) => fmtRange(row.interval_low_95, row.interval_high_95),
+        },
+        { label: "Nhãn", render: () => badge("Không phải dự báo", "warn") },
+      ],
+      rows: results,
+    }),
+  );
+}
+
+function alertsCard(pulse) {
+  const alerts = pulse.alerts || [];
+  const open = alerts.filter((alert) => alert.status === "open").length;
+  const suppressed = alerts.filter((alert) => alert.status === "suppressed").length;
+  const suffix =
+    pulse.gate && !pulse.gate.passed ? " vì chưa đạt kiểm định" : "";
+  const summary = `${open} cảnh báo đang mở · ${suppressed} cảnh báo bị chặn${suffix}`;
+
+  const body = [el("p", { class: "hero-sentence", text: summary })];
+  if (alerts.length) {
+    body.push(
+      detailsBlock(
+        "Bảng kiểm toán cảnh báo",
+        table({
+          caption: "Cảnh báo và trạng thái xử lý",
+          columns: [
+            { label: "Mã", key: "alert_id" },
+            { label: "Công ty", key: "company" },
+            { label: "Kỳ đích", key: "target_period" },
+            { label: "Quy tắc", key: "rule_id" },
+            { label: "Mức", key: "severity" },
+            {
+              label: "Trạng thái",
+              render: (row) => badge(statusLabel(row.status), row.status === "open" ? "warn" : "neutral"),
+            },
+            { label: "Thông điệp", key: "message" },
+          ],
+          rows: alerts,
+        }),
+      ),
+    );
+  } else {
+    body.push(emptyState("Chưa có cảnh báo"));
+  }
+
+  return card({ title: "Cảnh báo", body });
+}
+
+function limitationsCard() {
+  return card({
+    title: "Giới hạn của mô hình",
+    body: [
+      el(
+        "ul",
+        { class: "plain-list" },
+        el("li", { text: "Chỉ có hai công ty và số quý huấn luyện còn ít." }),
+        el("li", {
+          text: "Khoảng dự báo có thể chưa tách biệt ở hai mức tin cậy khi số điểm hiệu chuẩn nhỏ.",
+        }),
+        el("li", {
+          text: "Kết quả phụ thuộc hồ sơ SEC đã publish; không phản ánh thông tin chưa công bố.",
+        }),
+        el("li", { text: "Đây không phải khuyến nghị đầu tư." }),
+      ),
+    ],
+  });
+}
+
+function modelDetails(pulse) {
+  const gate = pulse.gate || {};
+  return detailsBlock(
+    "Thông tin mô hình và kiểm định",
+    factList([
+      ["model_id", pulse.model_id],
+      ["model_version", pulse.model_version],
+      ["as_of_date", pulse.as_of_date],
+      ["generated_at", fmtDateTime(pulse.generated_at)],
+      ["artifact", state.manifest?.dataset_version],
+      ["gate.reason", gate.reason || "—"],
+      ["coverage", pulse.coverage ? JSON.stringify(pulse.coverage) : "—"],
+      ["population", pulse.population ? JSON.stringify(pulse.population) : "—"],
+      ["disclaimer", pulse.disclaimer || "—"],
+      ["attribution_note", pulse.attribution_note || "—"],
+    ]),
+  );
+}
+
+function renderForecast(root) {
+  const pulse = state.payload?.pulse;
+  root.append(gateBanner(pulse));
+
+  if (!pulse?.available) {
+    root.append(
+      emptyState(
+        "Chưa có kết quả dự báo",
+        "Bản publish này không kèm kết quả AICOR Pulse.",
+      ),
+    );
+    return;
+  }
+
+  root.append(forecastSummaryTiles(pulse));
+
+  const results = pulse.results || [];
+  const coincident = results.some(
+    (row) =>
+      isNum(row.interval_low_80) &&
+      row.interval_low_80 === row.interval_low_95 &&
+      row.interval_high_80 === row.interval_high_95,
+  );
+  if (coincident) {
+    root.append(
+      noticeBlock(
+        "warn",
+        "Hai khoảng trùng nhau",
+        `Khoảng 80% và 95% trùng nhau vì số điểm hiệu chuẩn còn ít (${meta().forecast?.conformal_window ?? "—"} điểm). Đây là giới hạn của mẫu nhỏ, không phải hai mức tin cậy độc lập.`,
+      ),
+    );
+  }
+
+  if (pulse.gate?.passed) {
+    if (results.length) {
+      root.append(el("div", { class: "grid-2" }, results.map((row) => forecastCard(row))));
+    }
+  } else if (results.length) {
+    root.append(forecastAuditBlock(results));
+  }
+
+  root.append(alertsCard(pulse));
+  root.append(limitationsCard());
+  root.append(modelDetails(pulse));
+}
+
+/* ------------------------------------------------------------- renderers */
+
+const RENDERERS = {
+  "tong-quan": renderOverview,
+  "dau-vao-dau-ra": renderInputsOutputs,
+  "su-kien-ai": renderEvents,
+  "do-vung": renderRobustness,
+  "nguon-du-lieu": renderSources,
+  "thi-truong": renderMarket,
+  "du-bao": renderForecast,
+};
+
+/* -------------------------------------------------------------------- init */
+
+function init() {
+  initTheme();
+  bindNavigation();
+  bindControls();
+  setView(viewFromHash(), { focus: false, updateHash: false });
+  renderAll();
+  loadData({ initial: true });
+
+  state.pollTimer = setInterval(checkForUpdates, POLL_MS);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) checkForUpdates();
+  });
+}
+
+init();
