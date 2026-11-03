@@ -218,26 +218,32 @@ def series_frame(features: pd.DataFrame, config: AnalysisConfig | None = None) -
         for col in ("In", "Out", "E"):
             base[col] = np.nan
         base["E_status"] = "unavailable"
-        base["E_robustness"] = "SENSITIVE"
+        base["E_robustness"] = None
         return base
+
+    scenario_cols: list[str] = []
+    for scenario in cfg.weights:
+        scenario_cols.extend(
+            [
+                f"Out_{scenario}",
+                f"E_{scenario}",
+                f"E_{scenario}_status",
+            ]
+        )
 
     merge_cols = [
         "company",
         "calendar_quarter",
         "In",
-        "Out_baseline",
-        "E_baseline",
-        "E_baseline_status",
         "E_robustness",
+        *scenario_cols,
     ]
     merged = features.merge(wide[merge_cols], on=["company", "calendar_quarter"], how="left")
-    merged = merged.rename(
-        columns={
-            "Out_baseline": "Out",
-            "E_baseline": "E",
-            "E_baseline_status": "E_status",
-        }
-    )
+    # Keep the per-scenario columns for DSH-04 and expose baseline aliases for
+    # the Pulse engine and the compact 12-quarter table.
+    merged["Out"] = merged["Out_baseline"]
+    merged["E"] = merged["E_baseline"]
+    merged["E_status"] = merged["E_baseline_status"]
     return merged
 
 

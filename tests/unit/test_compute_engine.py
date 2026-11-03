@@ -172,7 +172,21 @@ def test_series_frame_keeps_baseline_aliases(features):
     assert usable["E_status"].tolist() == usable["E_baseline_status"].tolist()
 
 
-def test_series_frame_empty_input_has_null_robustness():
-    empty = pd.DataFrame(columns=["company", "calendar_quarter", "period_end_date"])
-    series = series_frame(empty, load_analysis_config())
-    assert series["E_robustness"].isna().all()
+def test_series_frame_does_not_claim_sensitivity_without_scenarios():
+    cfg = load_analysis_config()
+    panel = pd.DataFrame(
+        {
+            "period_end_date": pd.date_range("2025-01-31", periods=16, freq="QE-JAN").astype(str),
+            "company": "MSFT",
+            "source_id": [f"SEC-MSFT-{i}" for i in range(16)],
+            "revenue": 1000.0,
+            "rd_expense": np.linspace(100, 200, 16),
+            "capex": 100.0,
+            "year": 2025,
+            "calendar_quarter": [((i % 4) + 1) for i in range(16)],
+        }
+    )
+    features = build_feature_matrix(panel, None, None, config=cfg)
+    series = series_frame(features, cfg)
+    assert series["E"].isna().all()
+    assert series["E_robustness"].isna().all(), "missing E must not be labelled SENSITIVE"

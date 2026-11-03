@@ -132,15 +132,17 @@ def compute_e(out_value: float | None, in_value: float | None) -> float | None:
     return float(out_value) - float(in_value)
 
 
-def sign_robustness(values: list[float | None]) -> str:
+def sign_robustness(values: list[float | None]) -> str | None:
     """Classify a quarter as ``ROBUST`` / ``SENSITIVE`` across scenarios.
 
-    ``ROBUST`` — all available scenarios agree on the sign of ``E``.
-    ``SENSITIVE`` — at least one scenario disagrees (or fewer than 2 usable).
+    ``ROBUST`` - all available scenarios agree on the sign of ``E``.
+    ``SENSITIVE`` - at least one scenario disagrees.
+    ``None`` - fewer than two scenarios are usable; a missing value cannot
+    support a statement about stability.
     This is a sensitivity description, never a statistical test.
     """
     usable = [float(v) for v in values if v is not None and not np.isnan(v)]
     if len(usable) < 2:
-        return "SENSITIVE"
+        return None
     signs = {1 if v > 0 else -1 if v < 0 else 0 for v in usable}
     return "ROBUST" if len(signs) == 1 else "SENSITIVE"
