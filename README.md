@@ -16,6 +16,8 @@ Kết quả đo lường là điểm tương đối:
 $$E = Out - In$$
 
 > **Lưu ý liêm chính nghiên cứu:** Điểm $E$ là thước đo tương đối để quan sát xu hướng lịch sử và kiểm tra độ nhạy trọng số; không phải ROI, lợi nhuận hay bằng chứng quan hệ nhân quả (SRS §1.1).
+>
+> **Lớp mở rộng AICOR Pulse (Phase 2.5):** Bổ sung nowcast quý hiện tại ($h=0$) trước khi có 10-Q và forecast 1 quý tới ($h=1$) bằng mô hình tuyến tính có kiểm soát (Ridge/Elastic Net) kèm khoảng tin cậy 80%/95%, cảnh báo rủi ro (alert) và giải thích yếu tố đóng góp (driver attribution); tất cả được gắn nhãn thử nghiệm (experimental) và không phải khuyến nghị đầu tư (SRS §0 Quyết định 5, §7.6).
 
 ---
 
@@ -40,9 +42,16 @@ Dự án tuân thủ nghiêm ngặt quy trình tiền xử lý 9 thao tác của
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │ Analysis-ready panel
 ┌───────────────────────────────────▼────────────────────────────────────┐
-│               AUTOMATION & VERIFICATION (GitHub Actions)               │
-│  - 4 Cron Crawlers định kỳ tự động lưu data & manifests về repo         │
-│  - Validate gate chạy tự động trên push/PR (65/65 tests green)         │
+│       METRIC & NOWCAST/FORECAST ENGINE (Phase 2 & Phase 2.5)           │
+│  - Metrics        : In = z(RD), Out = w1*z(Product) + w2*z(Trends), E  │
+│  - AICOR Pulse    : Nowcast (h=0), Forecast (h=1) qua Ridge/ElasticNet │
+│  - Assurance      : 80%/95% Interval, Point-in-time guard, Top 3 Driver│
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ Validated artifacts
+┌───────────────────────────────────▼────────────────────────────────────┐
+│         AUTOMATION & 7-VIEW DASHBOARD (Phase 3 - GitHub Pages)         │
+│  - 4 Cron Crawlers + Quality Gates tự động trên GitHub CI              │
+│  - Dashboard 7 Chế độ xem: DSH-01 đến DSH-07 (AICOR Pulse & Alerts)    │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -50,7 +59,7 @@ Dự án tuân thủ nghiêm ngặt quy trình tiền xử lý 9 thao tác của
 
 ## 2. Nguồn dữ liệu & Lịch thu thập tự động (Rate Limit & Schedules)
 
-Các crawler hoạt động độc lập (NFR-04: một nguồn lỗi không làm ảnh hưởng nguồn khác), lưu bản snapshot nguyên gốc kèm mã hash SHA-256 trong `manifest.csv` và ghi nhật ký 16 trường vào `data/sync_log.jsonl`.
+Các crawler hoạt động độc lập (NFR-04: một nguồn lỗi không làm ảnh hưởng nguồn khác), lưu bản snapshot nguyên gốc cùng mã hash SHA-256 trong `data/raw/manifest.csv` và ghi nhật ký vào `data/sync_log.jsonl`.
 
 | Nguồn | Tier | URL Canonical | Chu kỳ tự động (GitHub Actions) | Rate Limit / Cơ chế an toàn |
 | :--- | :---: | :--- | :--- | :--- |
@@ -64,50 +73,33 @@ Các crawler hoạt động độc lập (NFR-04: một nguồn lỗi không là
 ## 3. Cấu trúc thư mục
 
 ```text
-├── .github/workflows/          # 5 GitHub Actions workflows (CI + 4 Cron Crawlers)
+├── .github/workflows/          # CI, 4 crawler schedules, pipeline và GitHub Pages
 │   ├── validate.yml            # Chạy test suite & data quality gates trên push/PR
 │   ├── crawl-sec.yml           # Cron crawl SEC XBRL (Tier S) + auto-preprocess
 │   ├── crawl-market.yml        # Cron crawl Yahoo Finance (Tier B) + auto-preprocess
 │   ├── crawl-trends.yml        # Cron crawl Google Trends (Tier B) + auto-preprocess
-│   └── crawl-ir.yml            # Cron crawl IR Blogs (Tier A) + auto-preprocess
-├── data/                       # Dữ liệu thu thập và manifest truy vết
-│   ├── raw/                    # Snapshots dữ liệu thô bất biến (sec, market, trends, ir)
-│   ├── processed/              # 5 tập dữ liệu tiền xử lý chuẩn hóa dạng bảng (Lecture 07)
-│   │   ├── financial_quarterly.csv     # Bảng tài chính 22 quý, chuẩn hóa triệu USD, Q4=FY-9M
-│   │   ├── panel_quarterly.csv         # Bảng panel hợp nhất (is_msft, rd_intensity, capex_intensity)
-│   │   ├── ai_products.csv             # 204 sự kiện & công trình AI (2021-2026) đã gán nhãn A/B/C kèm giải trình
-│   │   ├── google_trends_quarterly.csv # Điểm xu hướng tìm kiếm gộp trung bình theo quý
-│   │   └── market_quarterly.csv        # Giá đóng cửa điều chỉnh TB & tổng volume theo quý
-│   └── sync_log.jsonl          # Nhật ký đồng bộ 16 trường (SRS §6.7)
-├── docs/                       # Tài liệu kiến trúc và kế hoạch
-│   ├── decisions/              # Baseline params & config (baseline.yaml, trends_config.yaml)
-│   ├── setup/                  # Hướng dẫn thiết lập môi trường
-│   ├── planning/               # Kế hoạch chi tiết và ma trận truy vết
-│   └── superpowers/plans/      # Kế hoạch triển khai kỹ thuật
-├── rubric/v1.yaml              # Rubric phân loại sản phẩm A/B/C (provisional)
+│   ├── crawl-ir.yml            # Cron crawl IR Blogs (Tier A) + auto-preprocess
+│   ├── pipeline.yml            # Lịch chạy pipeline phân tích
+│   └── pages.yml               # Deploy dashboard lên GitHub Pages
+├── config/analysis.yaml        # Cấu hình có phiên bản cho metric engine và forecast
+├── data/
+│   ├── raw/                    # Snapshot dữ liệu nguồn và manifest SHA-256
+│   ├── processed/              # Bảng chuẩn hóa, kết quả phân tích và forecast
+│   ├── quality/                # Báo cáo kiểm tra chất lượng
+│   ├── logs/                   # Log vận hành
+│   └── sync_log.jsonl          # Nhật ký đồng bộ crawler
+├── scripts/                    # Tiện ích đồng bộ portable Vibe Code skills
 ├── src/aicor/                  # Mã nguồn chính của AICOR
-│   ├── config.py               # Settings, CIK MSFT/GOOGL, rate limits
-│   ├── sources/                # 4 crawlers độc lập & registry contract
-│   │   ├── sec.py              # SEC XBRL crawler & period-aware tag resolver
-│   │   ├── market.py           # yfinance market data fetcher
-│   │   ├── trends.py           # Google Trends fetcher + circuit breaker
-│   │   ├── ir.py               # IR blog scraper & A/B/C classifier
-│   │   └── registry.py         # Data contracts (SourceRecord, SyncRecord)
-│   ├── preprocess/             # Tiền xử lý dữ liệu (Lecture 07)
-│   │   ├── extract.py          # Trích xuất XBRL JSON facts sang DataFrame & Q4 derivation
-│   │   ├── cleaning.py         # Thao tác 1: Làm sạch dữ liệu
-│   │   ├── missing.py          # Thao tác 2: Chính sách xử lý dữ liệu thiếu (NULL)
-│   │   ├── transform.py        # Thao tác 3: Chuyển đổi YTD→Quý & chuẩn hóa lịch
-│   │   ├── integrate.py        # Thao tác 4: Tích hợp dữ liệu & tạo biến giả (dummies)
-│   │   ├── scale.py            # Thao tác 5: Chuẩn hóa tỉ lệ (z-score, MA4Q)
-│   │   └── features.py         # Metadata truy vết biến phái sinh
-│   └── pipeline/               # Điều phối pipeline 8 bước (SRS §9)
-│       ├── archive.py          # Ghi manifest SHA-256 và sync_log
-│       └── run.py              # run_pipeline & run_full_pipeline CLI
-├── tests/                      # Bộ kiểm thử tự động (74 tests)
-│   ├── contract/               # Kiểm thử schema & bất biến dữ liệu
-│   ├── unit/                   # Kiểm thử logic tiền xử lý và rubric
-│   └── integration/            # Kiểm thử tích hợp crawler & pipeline E2E
+│   ├── sources/                # Crawler SEC, market, Trends và IR
+│   ├── preprocess/             # Tiền xử lý dữ liệu nguồn
+│   ├── compute/                # Tính features và In/Out/E
+│   ├── forecast/               # AICOR Pulse, backtest, alert và model card
+│   └── pipeline/               # CLI, điều phối, artifacts và dashboard publish
+├── tests/                      # Unit, contract và integration tests
+├── web/                        # Dashboard tĩnh, không cần bước build frontend
+│   ├── index.html
+│   ├── assets/
+│   └── data/                   # Manifest và payload dashboard đã publish
 ├── pyproject.toml              # Cấu hình dự án Python & dependencies
 └── SPEC.md                     # Đặc tả yêu cầu hệ thống SRS Baseline
 ```
@@ -118,27 +110,44 @@ Các crawler hoạt động độc lập (NFR-04: một nguồn lỗi không là
 
 ### 4.1 Yêu cầu môi trường
 - Python `>= 3.12`
-- Trình quản lý gói [`uv`](https://github.com/astral-sh/uv) (khuyến nghị) hoặc `pip`
+- Trình quản lý gói [`uv`](https://github.com/astral-sh/uv)
 
-### 4.2 Cài đặt dependencies
+### 4.2 Chạy demo dashboard (dùng dữ liệu đã publish)
+
+Demo dashboard tĩnh dùng dữ liệu trong `web/data/`; không cần cài dependencies Python,
+API key hay chạy crawler. Từ thư mục gốc repo, mở PowerShell:
+
+```powershell
+python --version
+python -m http.server 8765 --directory web
+```
+
+Mở <http://localhost:8765> trong trình duyệt. Giữ cửa sổ terminal đang chạy server;
+nhấn `Ctrl+C` để dừng. Không mở `web/index.html` trực tiếp bằng `file://`, vì dashboard
+cần HTTP để tải manifest và payload dữ liệu.
+
+### 4.3 Cài đặt dependencies
 ```bash
 git clone https://github.com/tienspz/AICOR.git
 cd AICOR
 
-# Đồng bộ môi trường bằng uv
+# Đồng bộ dependencies và cài project
 uv sync --all-extras
 ```
 
-### 4.3 Chạy bộ kiểm thử (Unit, Contract, E2E)
+### 4.4 Chạy bộ kiểm thử
 ```bash
-# Chạy toàn bộ offline test suite
-uv run pytest -v
+# Chạy test suite
+uv run python -m pytest -v
 
 # Chạy kèm báo cáo độ phủ mã nguồn (coverage)
-uv run pytest --cov=src/aicor tests/
+uv run python -m pytest --cov=src/aicor tests/
 ```
 
-### 4.4 Chạy crawler độc lập thủ công
+### 4.5 Chạy crawler độc lập thủ công
+Các lệnh crawler cần kết nối mạng. SEC EDGAR yêu cầu khai báo `SEC_USER_AGENT`
+trong file `.env` (xem `.env.example`).
+
 ```bash
 # Crawl báo cáo tài chính SEC XBRL
 uv run python -m aicor.sources.sec
@@ -153,20 +162,28 @@ uv run python -m aicor.sources.trends
 uv run python -m aicor.sources.ir
 ```
 
-### 4.5 Chạy Pipeline tiền xử lý dữ liệu (End-to-End)
+### 4.6 Chạy pipeline
 ```bash
-# Đọc toàn bộ data/raw/, thực thi 9 phép chuẩn hóa (Lecture 07) và xuất 5 file CSV vào data/processed/
-uv run python -m aicor.pipeline.run
+# Chỉ thu thập dữ liệu (gọi các crawler; cần mạng)
+uv run python -m aicor.pipeline.run --stage collect
+
+# Tiền xử lý dữ liệu đã có trong data/raw/
+uv run python -m aicor.pipeline.run --stage preprocess
+
+# Tính metrics/forecast và publish dữ liệu cho dashboard
+uv run python -m aicor.pipeline.run --stage analysis
+
+# Chạy preprocess rồi analysis; không tự chạy crawler
+uv run python -m aicor.pipeline.run --stage all
 ```
-> **Tự động hóa hoàn toàn trên GitHub Actions:** Mỗi khi bất kỳ crawler cron nào chạy thành công, GitHub Actions sẽ tự động thực thi bước này, xác thực qua kiểm thử dữ liệu và commit cả `data/raw/` lẫn `data/processed/` ngược về repository!
 
 ---
 
 ## 5. Nguyên tắc thiết kế cốt lõi (NFRs)
 
-- **NFR-01 (Tính tái lập):** Mọi file snapshot đều lưu kèm mã băm SHA-256 trong `manifest.csv`. Cùng đầu vào + cùng tham số công thức cho ra kết quả đồng nhất.
+- **NFR-01 (Tính tái lập):** Snapshot nguồn lưu mã băm SHA-256 trong `data/raw/manifest.csv`; artifact phân tích và dashboard cũng có manifest/checksum riêng.
 - **NFR-02 (Tính truy vết):** Mọi dòng dữ liệu phân tích đều có `source_id` dẫn về tài liệu gốc của công ty.
-- **NFR-03 (Quản lý phiên bản cấu hình):** Tham số rolling window, rubric trọng số nằm trong `docs/decisions/baseline.yaml` và `rubric/v1.yaml`.
+- **NFR-03 (Quản lý phiên bản cấu hình):** Tham số metric và forecast nằm trong `config/analysis.yaml`.
 - **NFR-04 (Khả năng chịu lỗi):** Lỗi ở 1 nguồn (ví dụ Google Trends chặn IP) sẽ chuyển trạng thái sang `partial`, bảo toàn toàn bộ dữ liệu SEC/IR mà không bị rollback.
 - **NFR-06 (Bảo mật):** Không hardcode API key/secret. User-Agent lấy từ biến môi trường `SEC_USER_AGENT`.
 - **NFR-07 (Tuân thủ nguồn):** Tuân thủ giới hạn SEC `≤ 10 req/s` bằng bộ điều phối thời gian cố định; IR blogs áp dụng polite fetch (delay 2.0s/feed kèm khai báo User-Agent đầy đủ).
@@ -175,16 +192,70 @@ uv run python -m aicor.pipeline.run
 
 ## 6. Lộ trình phát triển tiếp theo
 
-- [x] **Phase 1: Data Collection & Preprocessing** (Hoàn thành — 74/74 tests green, 5 GitHub Actions workflows live).
+- [x] **Phase 1: Data Collection & Preprocessing** (Crawlers, preprocessing và quality gates).
   - Tầng raw bất biến (SEC facts XBRL, Market 1,255 bars, Trends 1,004 rows, IR 204 products).
   - Tầng processed chuẩn hóa: 5 bảng CSV tại `data/processed/` (44 quý từ 2021-Q1 đến 2026-Q2).
   - Khắc phục triệt để logic cross-tag Q4 cho GOOGL: $Q_4 = FY - 9M$, cân đối $|Assets - (Liabilities + Equity)| = 0.0$.
   - Tự động hóa khép kín: Tự động crawl, tiền xử lý, kiểm tra chất lượng và commit/push trên GitHub Actions.
-- [ ] **Phase 2: Metric Computation Engine ($In$, $Out$, $E$)**
+- [x] **Phase 2: Metric Computation Engine ($In$, $Out$, $E$)** — hoàn thành (xem §7)
   - Tính toán $In = z(\text{RD})$ (với RD là chi phí R&D) đối xứng cho 2 công ty.
   - Tính toán $Out = w_1 \cdot z(\text{Product MA4Q}) + w_2 \cdot z(\text{Trends MA4Q})$ với 3 kịch bản trọng số độ nhạy ($0.6/0.4, 0.5/0.5, 0.7/0.3$).
   - Xử lý các case ngoại lệ: $std = 0 \to \text{degenerate}$, $< 4$ quý $\to \text{NULL}$.
   - Xuất bảng kết quả chuẩn hóa `analysis_results.csv` và `features_quarterly.csv`.
-- [ ] **Phase 3: Interactive Dashboard (Web UI)**
-  - Xây dựng 6 chế độ xem (DSH-01 Điểm E, DSH-02 Input/Output, DSH-03 Timeline sự kiện, DSH-04 Độ nhạy trọng số, DSH-05 Trạng thái & bằng chứng, DSH-06 Bối cảnh thị trường).
+- [x] **Phase 2.5: AICOR Pulse — Controlled Nowcast/Forecast Engine (FCST-01…12)** — hoàn thành, quality gate fail-closed (xem §7)
+  - Nowcast quý hiện tại ($h = 0$) trước khi có 10-Q và Forecast 1 quý tới ($h = 1$) cho các thành phần hoặc trực tiếp $E$.
+  - Thuật toán: Baseline Naive/AR(1); mô hình chính Ridge Regression, Elastic Net hoặc Bayesian Ridge (nghiêm cấm Deep Learning vì cỡ mẫu $N \le 44$).
+  - Khoảng tin cậy 80% & 95% (Conformal prediction / Bayesian interval), rào chắn Point-in-time guard (NFR-09).
+  - Hệ thống cảnh báo tự động (Alert rules) và bóc tách top 3 yếu tố đóng góp (Driver Attribution qua SHAP/hệ số chuẩn hóa).
+  - Kiểm định cuốn chiếu Rolling-origin backtest và Quality gate (FCST-08: bắt buộc beat Naive/AR(1) mới hiển thị nhãn forecast).
+- [x] **Phase 3: Interactive Dashboard (Web UI)** — hoàn thành tại `web/` (7 view, không build step)
+  - Xây dựng 7 chế độ xem hoàn chỉnh (DSH-01 đến DSH-07):
+    - DSH-01: E Score theo quý
+    - DSH-02: Input vs Output
+    - DSH-03: Timeline sự kiện
+    - DSH-04: Weight Sensitivity (0.6/0.4, 0.5/0.5, 0.7/0.3)
+    - DSH-05: Trạng thái & bằng chứng (Data Status & Evidence)
+    - DSH-06: Bối cảnh thị trường (Market Context)
+    - DSH-07: AICOR Pulse — Forecast & Alerts (Nowcast/forecast $E$, interval 80%/95%, alert badge, top 3 driver attribution, link model card, nhãn experimental).
   - Triển khai hosting tĩnh trên GitHub Pages.
+
+---
+
+## 7. Phase 2 / 2.5 / 3 — trạng thái triển khai
+
+### 7.1 Metric engine (Phase 2)
+
+- Code: `src/aicor/compute/` — `metrics.py` (MA4Q, z16Q, `std=0`, Product Score), `features.py` (panel → feature matrix), `engine.py` (`In`, `Out`, `E` × 3 kịch bản), `provenance.py` (`source_id → source_url`).
+- Cấu hình có phiên bản: `config/analysis.yaml` (`aicor-analysis-v1`).
+- Artifact: `data/processed/features_quarterly.csv`, `data/processed/analysis_results.csv`, `data/processed/provenance.csv`, `data/processed/analysis_manifest.json` (SHA-256 từng file).
+- `z16Q` = cửa sổ 16 quý gần nhất, tính riêng từng công ty. Với dữ liệu hiện tại: 7 quý/công ty có `E` (2024Q4→2026Q2); 15 quý đầu bị `insufficient_window` và **không** dùng cho `E`.
+- Giá trị thiếu luôn là `NULL` + `reason`; không có 0 thay thế.
+
+### 7.2 AICOR Pulse (Phase 2.5)
+
+- Code: `src/aicor/forecast/` — `snapshot.py` (point-in-time), `models.py` (naive / AR(1) / Ridge NumPy), `backtest.py` (rolling-origin + quality gate), `alerts.py`, `model_card.py`, `pulse.py`.
+- Artifact: `forecast_results.csv`, `forecast_backtest.csv`, `forecast_coverage.csv`, `alert_log.csv`, `model_registry.json`, `model_card.md`.
+- Horizon: `h=0` = quý hiện tại chưa có 10-Q; `h=1` = quý kế tiếp. Target = `E` trực tiếp (ghi trong config).
+- **Kết quả thực tế trên dữ liệu hiện tại:** quality gate **không đạt** (Ridge 1.05 MAE so với naive 0.66 ở h=0; 1.04 so với 1.03 ở h=1). Vì vậy toàn bộ kết quả Pulse hiển thị là `insufficient_evidence`, alert bị `suppressed`. Đây là hành vi đúng theo FCST-08, không phải lỗi.
+
+### 7.3 Dashboard (Phase 3)
+
+- Một frontend duy nhất tại `web/`: `index.html` + `assets/{app.js,chart.js,styles.css}`, không framework runtime, không build step.
+- 7 view DSH-01…07; dữ liệu chỉ đọc từ `web/data/manifest.json` → `runs/<run_id>.json` (payload bất biến, kiểm tra SHA-256 trước khi render).
+- Có loading / empty / stale / partial / error state; tab có điều hướng bàn phím; biểu đồ có điểm dữ liệu focusable + tooltip; bảng số liệu trong `<details>`; tôn trọng `prefers-reduced-motion`; responsive; light/dark theo hệ điều hành.
+- Trình duyệt **không** tính lại chỉ số nghiên cứu và **không** gọi crawler.
+
+### 7.4 Vận hành
+
+```bash
+uv run python -m aicor.pipeline.run --stage collect   # 4 nguồn, retry/backoff, cô lập lỗi
+uv run python -m aicor.pipeline.run --stage preprocess
+uv run python -m aicor.pipeline.run --stage analysis   # compute + Pulse + publish
+uv run python -m aicor.pipeline.run --stage all
+python -m http.server 8765 --directory web             # xem dashboard local
+```
+
+- Publish atomic: payload ghi vào `runs/<run_id>.json` (fsync) rồi mới thay `manifest.json`.
+- Dashboard poll manifest mỗi 30 giây và kiểm tra checksum trước khi render.
+- Lịch: `.github/workflows/pipeline.yml` (4 lần/ngày, `concurrency` chống chạy trùng); lock trong `data/.pipeline.lock` có thu hồi lock cũ.
+- **Không có SLA/24×7:** chưa có uptime monitoring; GitHub Actions cron có thể bị trễ.

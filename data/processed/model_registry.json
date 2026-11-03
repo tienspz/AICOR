@@ -1,0 +1,141 @@
+{
+  "model_id": "aicor-pulse",
+  "model_version": "pulse-1d2d9370",
+  "config_version": "aicor-analysis-v1",
+  "feature_set_version": "features-v1",
+  "target": "E",
+  "horizons": [
+    0,
+    1
+  ],
+  "features": [
+    "e_lag1",
+    "e_lag2",
+    "out_lag1",
+    "in_lag1",
+    "rd_intensity_lag1",
+    "capex_intensity_lag1",
+    "product_ma4q_lag1",
+    "trends_ma4q_lag1",
+    "is_msft",
+    "target_quarter_num"
+  ],
+  "alpha_grid": [
+    0.01,
+    0.1,
+    1.0,
+    10.0
+  ],
+  "random_state": 42,
+  "n_samples": 22,
+  "run_id": "20261103T144352Z-9bc981",
+  "as_of_date": "2026-07-29",
+  "as_of_policy": "Mọi feature chỉ dùng dữ liệu có available_at <= as_of_date; giá trị target chỉ dùng để huấn luyện/đánh giá.",
+  "training_window": {
+    "first_target_quarter": "2025Q1",
+    "last_target_quarter": "2026Q2",
+    "n_quarters": 6
+  },
+  "hyperparameters": {
+    "alpha_grid": [
+      0.01,
+      0.1,
+      1.0,
+      10.0
+    ],
+    "conformal_window": 8,
+    "random_state": 42,
+    "standardization": "train-only mean/std, median imputation"
+  },
+  "interval_method": {
+    "levels": [
+      0.8,
+      0.95
+    ],
+    "method": "split-conformal on chronological calibration block; normal fallback if <3 residuals"
+  },
+  "backtest_metrics_h0_pooled": {
+    "naive": {
+      "n": 8.0,
+      "mae": 0.6561368470101585,
+      "rmse": 0.8217257948478172,
+      "directional_accuracy": 0.0
+    },
+    "ar1": {
+      "n": 8.0,
+      "mae": 0.6639343134058917,
+      "rmse": 0.9638665596976709,
+      "directional_accuracy": 0.625
+    },
+    "ridge": {
+      "n": 8.0,
+      "mae": 1.0508995786027624,
+      "rmse": 1.381777850930853,
+      "directional_accuracy": 0.625
+    }
+  },
+  "quality_gate": {
+    "passed": false,
+    "reason": "primary_model_does_not_beat_naive",
+    "checks": [
+      {
+        "horizon": 0,
+        "status": "fail",
+        "model_mae": 1.0509,
+        "naive_mae": 0.656137,
+        "model_rmse": 1.381778,
+        "naive_rmse": 0.821726,
+        "n": 8
+      },
+      {
+        "horizon": 1,
+        "status": "fail",
+        "model_mae": 1.041442,
+        "naive_mae": 1.032192,
+        "model_rmse": 1.233492,
+        "naive_rmse": 1.253294,
+        "n": 6
+      }
+    ],
+    "primary_model": "ridge",
+    "baseline_model": "naive",
+    "require_both": true
+  },
+  "coverage": {
+    "naive_80": {
+      "coverage": 0.75,
+      "n": 8.0
+    },
+    "naive_95": {
+      "coverage": 0.75,
+      "n": 8.0
+    },
+    "ar1_80": {
+      "coverage": 0.5,
+      "n": 8.0
+    },
+    "ar1_95": {
+      "coverage": 0.625,
+      "n": 8.0
+    },
+    "ridge_80": {
+      "coverage": 0.625,
+      "n": 8.0
+    },
+    "ridge_95": {
+      "coverage": 0.625,
+      "n": 8.0
+    }
+  },
+  "limitations": [
+    "N rất nhỏ: tối đa vài chục quan sát pooled sau khi z16Q đủ cửa sổ; kết quả nhạy với lựa chọn feature.",
+    "R&D là proxy cho đầu tư AI, không phải chi tiêu AI được công bố riêng.",
+    "Google Trends là chỉ số tương đối, phụ thuộc bộ từ khóa và địa lý đã chốt.",
+    "Mô hình tuyến tính, không có deep learning (SPEC §5, FCST-05).",
+    "Forecast không biết sự kiện sản phẩm tương lai; chủ yếu dựa trên momentum và seasonality.",
+    "Driver attribution là yếu tố đóng góp trong mô hình, KHÔNG phải quan hệ nhân quả.",
+    "Đây là thử nghiệm nghiên cứu, không phải khuyến nghị đầu tư."
+  ],
+  "artifact_hash": "19443d610b4bf62106ae5bb7f9b13cf7bfce9d693b957e1192320ea8d326bdc5",
+  "disclaimer": "Experimental research output — không phải khuyến nghị đầu tư."
+}

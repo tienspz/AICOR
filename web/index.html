@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AICOR — AI Investment &amp; Corporate Outcome Research</title>
+    <meta
+      name="description"
+      content="Dashboard nghiên cứu so sánh mức đầu vào AI (In) và đầu ra AI (Out) của Microsoft và Alphabet theo quý, kèm AICOR Pulse (nowcast/forecast có kiểm soát)."
+    />
+    <link rel="stylesheet" href="assets/styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Bỏ qua điều hướng</a>
+
+    <header class="app-header">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">AC</span>
+        <span class="brand-text">
+          <span class="brand-title">AICOR</span>
+          <span class="brand-sub">MSFT × GOOGL · AI input vs output theo quý</span>
+        </span>
+      </div>
+
+      <div class="header-controls">
+        <div class="segmented" role="group" aria-label="Lọc theo công ty">
+          <button type="button" class="seg-btn" data-company="ALL" aria-pressed="true">Cả hai</button>
+          <button type="button" class="seg-btn" data-company="MSFT" aria-pressed="false">MSFT</button>
+          <button type="button" class="seg-btn" data-company="GOOGL" aria-pressed="false">GOOGL</button>
+        </div>
+        <button type="button" class="ghost-btn" id="refresh-btn">Tải lại</button>
+      </div>
+
+      <div class="header-status" id="header-status" aria-live="polite">
+        <span class="status-pill status-pill--loading">Đang tải dữ liệu…</span>
+      </div>
+    </header>
+
+    <nav class="tabs" role="tablist" aria-label="Chế độ xem dashboard">
+      <button type="button" role="tab" id="tab-dsh-01" aria-controls="dsh-01" aria-selected="true" tabindex="0">
+        <span class="tab-code">DSH-01</span> Điểm E
+      </button>
+      <button type="button" role="tab" id="tab-dsh-02" aria-controls="dsh-02" aria-selected="false" tabindex="-1">
+        <span class="tab-code">DSH-02</span> In vs Out
+      </button>
+      <button type="button" role="tab" id="tab-dsh-03" aria-controls="dsh-03" aria-selected="false" tabindex="-1">
+        <span class="tab-code">DSH-03</span> Timeline
+      </button>
+      <button type="button" role="tab" id="tab-dsh-04" aria-controls="dsh-04" aria-selected="false" tabindex="-1">
+        <span class="tab-code">DSH-04</span> Weight Sensitivity
+      </button>
+      <button type="button" role="tab" id="tab-dsh-05" aria-controls="dsh-05" aria-selected="false" tabindex="-1">
+        <span class="tab-code">DSH-05</span> Data Status
+      </button>
+      <button type="button" role="tab" id="tab-dsh-06" aria-controls="dsh-06" aria-selected="false" tabindex="-1">
+        <span class="tab-code">DSH-06</span> Market Context
+      </button>
+      <button type="button" role="tab" id="tab-dsh-07" aria-controls="dsh-07" aria-selected="false" tabindex="-1">
+        <span class="tab-code">DSH-07</span> AICOR Pulse
+      </button>
+    </nav>
+
+    <main id="main">
+      <div class="notice notice--loading" id="global-banner" role="status" hidden></div>
+
+      <section role="tabpanel" id="dsh-01" aria-labelledby="tab-dsh-01" tabindex="0" class="view">
+        <header class="view-head">
+          <h2>DSH-01 · Điểm E theo quý</h2>
+          <p class="view-sub">
+            E = Out − In là chỉ số tương đối để quan sát xu hướng; không phải ROI và không chứng minh
+            quan hệ nhân quả.
+          </p>
+        </header>
+        <div class="view-body" data-view-body></div>
+      </section>
+
+      <section role="tabpanel" id="dsh-02" aria-labelledby="tab-dsh-02" tabindex="0" class="view" hidden>
+        <header class="view-head">
+          <h2>DSH-02 · Input vs Output</h2>
+          <p class="view-sub">
+            In = z(R&amp;D quý); Out = trọng số × z(Product MA4Q) + trọng số × z(Trends MA4Q). Đơn vị:
+            z-score (không đơn vị).
+          </p>
+        </header>
+        <div class="view-body" data-view-body></div>
+      </section>
+
+      <section role="tabpanel" id="dsh-03" aria-labelledby="tab-dsh-03" tabindex="0" class="view" hidden>
+        <header class="view-head">
+          <h2>DSH-03 · Timeline sự kiện</h2>
+          <p class="view-sub">
+            Sản phẩm/công bố AI đã phân loại A/B/C theo rubric v1-provisional; mỗi mục có liên kết
+            nguồn gốc.
+          </p>
+        </header>
+        <div class="view-body" data-view-body></div>
+      </section>
+
+      <section role="tabpanel" id="dsh-04" aria-labelledby="tab-dsh-04" tabindex="0" class="view" hidden>
+        <header class="view-head">
+          <h2>DSH-04 · Weight Sensitivity</h2>
+          <p class="view-sub">
+            So sánh ba bộ trọng số 0.6/0.4, 0.5/0.5, 0.7/0.3. “ROBUST” nghĩa là mọi kịch bản cùng dấu
+            E — không phải một kiểm định thống kê.
+          </p>
+        </header>
+        <div class="view-body" data-view-body></div>
+      </section>
+
+      <section role="tabpanel" id="dsh-05" aria-labelledby="tab-dsh-05" tabindex="0" class="view" hidden>
+        <header class="view-head">
+          <h2>DSH-05 · Data Status &amp; Evidence</h2>
+          <p class="view-sub">
+            Độ mới, trạng thái đồng bộ, độ phủ và đường truy vết source_id → source_url. Dữ liệu thiếu
+            được hiển thị là thiếu, không quy về 0.
+          </p>
+        </header>
+        <div class="view-body" data-view-body></div>
+      </section>
+
+      <section role="tabpanel" id="dsh-06" aria-labelledby="tab-dsh-06" tabindex="0" class="view" hidden>
+        <header class="view-head">
+          <h2>DSH-06 · Market Context</h2>
+          <p class="view-sub">
+            Giá đóng cửa điều chỉnh theo quý (Yahoo Finance, Tier B) — chỉ dùng làm bối cảnh, không đưa
+            vào công thức E.
+          </p>
+        </header>
+        <div class="view-body" data-view-body></div>
+      </section>
+
+      <section role="tabpanel" id="dsh-07" aria-labelledby="tab-dsh-07" tabindex="0" class="view" hidden>
+        <header class="view-head">
+          <h2>DSH-07 · AICOR Pulse — Forecast &amp; Alerts</h2>
+          <p class="view-sub">
+            Nowcast/forecast E có kiểm soát: interval 80%/95%, as-of date, model version và nhãn
+            experimental. Không phải khuyến nghị đầu tư.
+          </p>
+        </header>
+        <div class="view-body" data-view-body></div>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <p>
+        AICOR là hệ thống nghiên cứu. <strong>E không phải ROI</strong> và không chứng minh nhân quả.
+        Dữ liệu chỉ đọc từ artifact đã publish; trình duyệt không tự tính lại chỉ số nghiên cứu.
+      </p>
+      <p id="footer-meta" class="footer-meta"></p>
+    </footer>
+
+    <div id="chart-tooltip" class="chart-tooltip" role="status" aria-live="polite" hidden></div>
+
+    <script type="module" src="assets/app.js"></script>
+  </body>
+</html>

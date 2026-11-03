@@ -1,0 +1,16 @@
+{
+  "generated_at": "2026-11-03T14:43:52+00:00",
+  "config_version": "aicor-analysis-v1",
+  "formula_version": "metrics-v1",
+  "feature_set_version": "features-v1",
+  "row_counts": {
+    "features_quarterly": 440,
+    "analysis_results": 308,
+    "provenance": 162
+  },
+  "artifacts": {
+    "features_quarterly.csv": "ccc548a07ea7480e765776dcdeb41a41cc039f1318733b7b334dca1a1035dd5c",
+    "analysis_results.csv": "fc36d4a187f17b792d3cb86a5c44f3a9636767fc82bfdaf154cd84f95589891e",
+    "provenance.csv": "2b7cc29e75183082d5fd116ff14794a14c14159bf8a6bc687e3852ae898d8ccd"
+  }
+}

@@ -38,6 +38,6 @@ jobs:
         run: |
           git config --local user.name "github-actions[bot]"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/ || true
+          git add data/ web/ || true
           git diff --staged --quiet || git commit -m "chore(data): auto-update market data [skip ci]"
           git push || echo "No changes to push"

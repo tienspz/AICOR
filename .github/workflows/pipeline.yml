@@ -1,0 +1,68 @@
+name: Pipeline (collect → analysis → publish)
+
+on:
+  schedule:
+    - cron: "0 3,9,15,21 * * *"
+  workflow_dispatch:
+    inputs:
+      retries:
+        description: "Retry attempts per crawler"
+        required: false
+        default: "2"
+
+permissions:
+  contents: write
+
+# Single-flight: a second scheduled run waits instead of duplicating work.
+concurrency:
+  group: aicor-pipeline
+  cancel-in-progress: false
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --all-extras
+
+      - name: Collect sources (isolated, retried)
+        continue-on-error: true
+        env:
+          SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+        run: uv run python -m aicor.pipeline.run --stage collect --retries ${{ inputs.retries || '2' }}
+
+      - name: Preprocess → compute → forecast → publish
+        env:
+          SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+        run: uv run python -m aicor.pipeline.run --stage all
+
+      - name: Validate (offline gates)
+        run: uv run pytest -m "not live" -q
+
+      - name: Upload run health
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pipeline-health
+          path: |
+            data/quality/health.json
+            data/pipeline_manifest.json
+          if-no-files-found: warn
+
+      - name: Commit data and dashboard artifacts
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/ web/
+          git diff --staged --quiet || git commit -m "chore(data): scheduled pipeline run [skip ci]"
+          git push || echo "No changes to push"

@@ -7,17 +7,15 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
 
 import pandas as pd
 
-from aicor.config import COMPANY_CIK, get_settings
+from aicor.config import get_settings
 from aicor.preprocess.cleaning import clean_financial
 from aicor.preprocess.integrate import add_company_dummy, join_panel
 from aicor.preprocess.missing import mark_missing
-from aicor.preprocess.scale import flag_outliers, ma4q, zscore_16q
 from aicor.preprocess.transform import align_calendar, normalize_units
 from aicor.sources import SyncRecord, write_sync_log
 
@@ -73,7 +71,7 @@ def run_pipeline(
             else:
                 result.source_statuses[source_name] = "empty"
                 result.errors.append(f"{source_name}: empty")
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 - a bad source must not abort the panel
             result.source_statuses[source_name] = "failed"
             result.errors.append(f"{source_name}: {e}")
 
@@ -86,9 +84,8 @@ def run_pipeline(
             frames[name] = df
 
         # FR_T01: quarter coverage check for financial data
-        if name in ("sec_msft", "sec_googl"):
-            if len(df) < 16:
-                logger.info("%s has %d quarters (< 16 quarters target FR_T01)", name, len(df))
+        if name in ("sec_msft", "sec_googl") and len(df) < 16:
+            logger.info("%s has %d quarters (< 16 quarters target FR_T01)", name, len(df))
 
         # DQ_T04: Accounting balance check: Assets == Liabilities + Equity
         if {"assets", "liabilities", "equity"}.issubset(df.columns):
@@ -156,8 +153,8 @@ def run_pipeline(
         SyncRecord(
             source_type="pipeline",
             company="ALL",
-            started_at=datetime.now(timezone.utc).isoformat(),
-            finished_at=datetime.now(timezone.utc).isoformat(),
+            started_at=datetime.now(UTC).isoformat(),
+            finished_at=datetime.now(UTC).isoformat(),
             sync_status=result.sync_status,
             records_fetched=len(panel),
             error_message="; ".join(result.errors) if result.errors else None,
@@ -298,13 +295,79 @@ def run_full_pipeline(settings=None) -> dict[str, pd.DataFrame]:
     return outputs
 
 
-def main() -> None:
-    print("Executing AICOR Preprocessing Pipeline on raw data...")
-    res = run_full_pipeline()
-    for name, df in res.items():
-        print(f"Generated data/processed/{name}.csv ({len(df)} rows)")
-    print("Preprocessing completed successfully!")
+def main(argv: list[str] | None = None) -> int:
+    """CLI entry point.
+
+    Stages (SPEC §9): ``collect`` → ``preprocess`` → ``analysis``
+    (compute + forecast + publish). ``all`` runs preprocess → analysis, which
+    is what the scheduled workflow uses.
+    """
+    import argparse
+    import json
+    import sys
+
+    # Windows consoles default to a legacy code page; JSON payloads contain
+    # Vietnamese text, so force UTF-8 on the stream instead of escaping it.
+    for stream in (sys.stdout, sys.stderr):
+        with __import__("contextlib").suppress(Exception):
+            stream.reconfigure(encoding="utf-8", errors="replace")
+
+    from aicor.pipeline.ops import configure_logging, pipeline_lock
+    from aicor.pipeline.orchestrate import new_run_id, run_analysis_cycle
+
+    parser = argparse.ArgumentParser(description="AICOR pipeline runner")
+    parser.add_argument(
+        "--stage",
+        default="all",
+        choices=["collect", "preprocess", "analysis", "all"],
+        help="which pipeline stage to execute",
+    )
+    parser.add_argument("--no-publish", action="store_true", help="compute artifacts without publishing the dashboard")
+    parser.add_argument("--sources", default="", help="comma-separated crawler names for --stage collect")
+    parser.add_argument("--retries", type=int, default=2, help="retry attempts per crawler")
+    args = parser.parse_args(argv)
+
+    logger = configure_logging()
+    run_id = new_run_id()
+
+    if args.stage == "collect":
+        from aicor.pipeline.collect import collect_all
+
+        only = [s.strip() for s in args.sources.split(",") if s.strip()] or None
+        summary = collect_all(only=only, retries=args.retries)
+        print(json.dumps(summary, indent=2, ensure_ascii=False))
+        return 0 if summary["status"] == "success" else 1
+
+    if args.stage in ("preprocess", "all"):
+        with pipeline_lock(run_id=run_id):
+            print("Executing AICOR preprocessing pipeline on raw data...")
+            res = run_full_pipeline()
+            for name, df in res.items():
+                print(f"Generated data/processed/{name}.csv ({len(df)} rows)")
+            if args.stage == "preprocess":
+                print("Preprocessing completed successfully!")
+                return 0
+
+    if args.stage in ("analysis", "all"):
+        from aicor.pipeline.ops import PipelineLockError
+
+        try:
+            with pipeline_lock(run_id=run_id):
+                cycle = run_analysis_cycle(run_id=run_id, publish=not args.no_publish)
+        except PipelineLockError as exc:
+            logger.error("pipeline: %s", exc)
+            print(f"Pipeline already running: {exc}")
+            return 2
+
+        print(json.dumps(cycle.as_dict(), indent=2, ensure_ascii=False, default=str))
+        if cycle.status == "failed":
+            return 1
+        print(
+            f"Analysis cycle {cycle.run_id} finished with status={cycle.status}; "
+            f"dashboard manifest={(cycle.manifest or {}).get('dataset_version', 'none')}"
+        )
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

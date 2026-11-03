@@ -1,0 +1,83 @@
+# AICOR — Phase 2 / 2.5 analytical configuration (NFR-03: versioned parameters)
+#
+# This file is the single source of truth for the metric engine and AICOR Pulse.
+# Every artifact written by `aicor.compute` / `aicor.forecast` records
+# `config_version` from here so a result can always be reproduced.
+#
+# Preprocessing parameters (z window, MA4Q, outlier rules) remain documented in
+# docs/decisions/baseline.yaml; the values below are the ones actually executed
+# by the metric engine and are asserted to agree with that document in
+# tests/unit/test_compute_config.py.
+
+version: "aicor-analysis-v1"
+
+formula_version: "metrics-v1"
+feature_set_version: "features-v1"
+
+zscore:
+  # SPEC §7.3 — z16Q: trailing 16-quarter window, per company.
+  method: "rolling_quarters"
+  window: 16
+  # A z value is only usable once the series holds 16 quarters (SPEC §7.3).
+  min_quarters: 16
+  # Within the window, at least this many non-null observations are required.
+  min_observations: 4
+  ddof: 1
+
+ma4q:
+  # SPEC §7.2 — strict 4-quarter moving average, no shorter window.
+  min_periods: 4
+
+product_score:
+  # SPEC §7.1 — 3*A + 2*B + 1*C
+  A: 3
+  B: 2
+  C: 1
+
+trends:
+  # §7.2 — mean of valid weekly points already aggregated per keyword/quarter.
+  aggregation: "mean_keywords"
+  keywords:
+    MSFT: ["Microsoft AI", "Azure AI"]
+    GOOGL: ["Google AI", "Gemini"]
+
+weights:
+  # SPEC §7.4 — default plus the two sensitivity scenarios.
+  baseline:
+    product: 0.6
+    trends: 0.4
+  simple:
+    product: 0.5
+    trends: 0.5
+  tech:
+    product: 0.7
+    trends: 0.3
+
+forecast:
+  model: "ridge"
+  horizons: [0, 1]
+  # Target is `E` directly (FCST-03 variant) — recorded here, not implied.
+  target: "E"
+  min_train_samples: 4
+  alpha_grid: [0.01, 0.1, 1.0, 10.0]
+  interval_levels: [0.8, 0.95]
+  # Number of train-block residuals used for split-conformal calibration.
+  conformal_window: 8
+  random_state: 42
+  # FCST-08: a model must beat naive on pooled MAE *and* RMSE to be labelled forecast.
+  quality_gate:
+    metric: ["mae", "rmse"]
+    require_both: true
+
+alerts:
+  # FCST-09 thresholds, versioned so severity is auditable.
+  e_threshold: -0.25
+  nowcast_deviation: 0.75
+  severity:
+    interval_crosses_zero: "WARN"
+    e_below_threshold: "CRITICAL"
+    nowcast_deviation: "INFO"
+
+publish:
+  schema_version: "dashboard-v1"
+  keep_versions: 5

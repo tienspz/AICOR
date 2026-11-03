@@ -50,9 +50,16 @@ data/raw/ir_documents/
 *.sqlite3
 data/*.db
 
+# --- Pipeline run state (logs + run lock are reproducible, not source) ---
+data/logs/
+data/.pipeline.lock
+
 # --- OS / editor ---
 Thumbs.db
 desktop.ini
 .DS_Store
 .vscode/
 .idea/
+
+# --- External tools / clones ---
+markitdown/

@@ -1,0 +1,128 @@
+"""Feature metadata registry (SPEC §6.1, PRV-01).
+
+Every derived feature carries its definition, the formula as executed, a
+confidence level and its inputs — the dashboard renders these verbatim, so a
+reviewer never has to infer what a number means.
+"""
+
+from __future__ import annotations
+
+FEATURE_META: dict[str, dict[str, object]] = {
+    "rd_expense": {
+        "definition": "Research & development expense reported by the company (reported, Tier S).",
+        "calculation_method": "SEC XBRL ResearchAndDevelopmentExpense, YTD→quarter derivation for Q4",
+        "reported_or_derived": "reported",
+        "proxy": True,
+        "confidence": "LOW",
+        "unit": "USD_millions",
+        "source_fields": ("rd_expense",),
+    },
+    "rd_intensity": {
+        "definition": "R&D expense divided by revenue (derived).",
+        "calculation_method": "rd_expense / revenue",
+        "reported_or_derived": "derived",
+        "proxy": True,
+        "confidence": "LOW",
+        "unit": "ratio",
+        "source_fields": ("rd_expense", "revenue"),
+    },
+    "capex_intensity": {
+        "definition": "Capital expenditure divided by revenue (derived).",
+        "calculation_method": "capex / revenue",
+        "reported_or_derived": "derived",
+        "proxy": False,
+        "confidence": "MEDIUM",
+        "unit": "ratio",
+        "source_fields": ("capex", "revenue"),
+    },
+    "product_score": {
+        "definition": "Weighted count of AI product announcements in the quarter (rubric v1-provisional).",
+        "calculation_method": "3 * count(A) + 2 * count(B) + 1 * count(C)",
+        "reported_or_derived": "derived",
+        "proxy": False,
+        "confidence": "MEDIUM",
+        "unit": "score",
+        "source_fields": ("ai_products.category",),
+    },
+    "product_ma4q": {
+        "definition": "Four-quarter moving average of the product score (strict, needs 4 quarters).",
+        "calculation_method": "rolling mean(window=4, min_periods=4) of product_score",
+        "reported_or_derived": "derived",
+        "proxy": False,
+        "confidence": "MEDIUM",
+        "unit": "score",
+        "source_fields": ("product_score",),
+    },
+    "trends_score": {
+        "definition": "Mean Google Trends interest for the company's AI keywords in the quarter.",
+        "calculation_method": "mean(interest_score) across the company's keywords for that quarter",
+        "reported_or_derived": "derived",
+        "proxy": True,
+        "confidence": "LOW",
+        "unit": "score",
+        "source_fields": ("google_trends.interest_score",),
+    },
+    "trends_ma4q": {
+        "definition": "Four-quarter moving average of the trends score (strict, needs 4 quarters).",
+        "calculation_method": "rolling mean(window=4, min_periods=4) of trends_score",
+        "reported_or_derived": "derived",
+        "proxy": True,
+        "confidence": "LOW",
+        "unit": "score",
+        "source_fields": ("trends_score",),
+    },
+    "z_in": {
+        "definition": "Standardised R&D input index (In).",
+        "calculation_method": "z16Q(rd_expense) — trailing 16-quarter window, per company",
+        "reported_or_derived": "derived",
+        "proxy": True,
+        "confidence": "LOW",
+        "unit": "zscore",
+        "source_fields": ("rd_expense",),
+    },
+    "z_product_ma4q": {
+        "definition": "Standardised product output component.",
+        "calculation_method": "z16Q(product_ma4q) — trailing 16-quarter window, per company",
+        "reported_or_derived": "derived",
+        "proxy": False,
+        "confidence": "MEDIUM",
+        "unit": "zscore",
+        "source_fields": ("product_ma4q",),
+    },
+    "z_trends_ma4q": {
+        "definition": "Standardised attention output component.",
+        "calculation_method": "z16Q(trends_ma4q) — trailing 16-quarter window, per company",
+        "reported_or_derived": "derived",
+        "proxy": True,
+        "confidence": "LOW",
+        "unit": "zscore",
+        "source_fields": ("trends_ma4q",),
+    },
+    "In": {
+        "definition": "Normalised AI-input proxy: In = z(R&D quarterly).",
+        "calculation_method": "z16Q(rd_expense)",
+        "reported_or_derived": "derived",
+        "proxy": True,
+        "confidence": "LOW",
+        "unit": "zscore",
+        "source_fields": ("z_in",),
+    },
+    "Out": {
+        "definition": "Weighted normalised AI-output index.",
+        "calculation_method": "w_product * z(product_ma4q) + w_trends * z(trends_ma4q)",
+        "reported_or_derived": "derived",
+        "proxy": True,
+        "confidence": "LOW",
+        "unit": "zscore",
+        "source_fields": ("z_product_ma4q", "z_trends_ma4q"),
+    },
+    "E": {
+        "definition": "Relative score E = Out - In. Not ROI and not evidence of causality.",
+        "calculation_method": "Out - In",
+        "reported_or_derived": "derived",
+        "proxy": True,
+        "confidence": "LOW",
+        "unit": "zscore",
+        "source_fields": ("Out", "In"),
+    },
+}
