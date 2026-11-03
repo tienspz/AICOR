@@ -1,12 +1,12 @@
 # Model card — aicor-pulse (pulse-1d2d9370)
 
-- **Run:** `20261103T144352Z-9bc981`
-- **As of:** 2026-07-29
+- **Run:** `20261103T170638Z-10e1f7`
+- **As of:** 2026-10-29
 - **Config version:** `aicor-analysis-v1`
 - **Feature set:** `features-v1`
 - **Target:** `E` · horizons [0, 1]
-- **Samples:** 22
-- **Artifact hash:** `19443d610b4bf62106ae5bb7f9b13cf7bfce9d693b957e1192320ea8d326bdc5`
+- **Samples:** 26
+- **Artifact hash:** `ddddbe4242119c2f69c798377d36881f7cc9e378e2c03e23318fa0ab3d59f171`
 
 ## As-of policy
 Mọi feature chỉ dùng dữ liệu có available_at <= as_of_date; giá trị target chỉ dùng để huấn luyện/đánh giá.
@@ -41,9 +41,9 @@ Mọi feature chỉ dùng dữ liệu có available_at <= as_of_date; giá trị
 ## Backtest (h=0, pooled)
 | Model | n | MAE | RMSE | Directional accuracy |
 | --- | --- | --- | --- | --- |
-| naive | 8 | 0.6561 | 0.8217 | 0.0 |
-| ar1 | 8 | 0.6639 | 0.9639 | 0.625 |
-| ridge | 8 | 1.0509 | 1.3818 | 0.625 |
+| naive | 10 | 0.7238 | 0.9096 | 0.0 |
+| ar1 | 10 | 0.6922 | 0.9546 | 0.7 |
+| ridge | 10 | 0.9463 | 1.2822 | 0.7 |
 
 ## Quality gate (FCST-08)
 **Passed:** False — primary_model_does_not_beat_naive
@@ -53,20 +53,20 @@ Mọi feature chỉ dùng dữ liệu có available_at <= as_of_date; giá trị
   {
     "horizon": 0,
     "status": "fail",
-    "model_mae": 1.0509,
-    "naive_mae": 0.656137,
-    "model_rmse": 1.381778,
-    "naive_rmse": 0.821726,
-    "n": 8
+    "model_mae": 0.946289,
+    "naive_mae": 0.72378,
+    "model_rmse": 1.282174,
+    "naive_rmse": 0.909624,
+    "n": 10
   },
   {
     "horizon": 1,
-    "status": "fail",
-    "model_mae": 1.041442,
-    "naive_mae": 1.032192,
-    "model_rmse": 1.233492,
-    "naive_rmse": 1.253294,
-    "n": 6
+    "status": "pass",
+    "model_mae": 0.853602,
+    "naive_mae": 0.978228,
+    "model_rmse": 1.101617,
+    "naive_rmse": 1.198644,
+    "n": 8
   }
 ]
 ```

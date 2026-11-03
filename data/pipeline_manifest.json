@@ -1,5 +1,5 @@
 {
-  "run_id": "20261103T144352Z-9bc981",
+  "run_id": "20261103T170638Z-10e1f7",
   "status": "success",
   "stages": {
     "load": "ok",
@@ -9,54 +9,54 @@
   },
   "artifacts": {
     "analysis": {
-      "generated_at": "2026-11-03T14:43:52+00:00",
+      "generated_at": "2026-11-03T17:06:38+00:00",
       "config_version": "aicor-analysis-v1",
       "formula_version": "metrics-v1",
       "feature_set_version": "features-v1",
       "row_counts": {
-        "features_quarterly": 440,
-        "analysis_results": 308,
-        "provenance": 162
+        "features_quarterly": 460,
+        "analysis_results": 322,
+        "provenance": 165
       },
       "artifacts": {
-        "features_quarterly.csv": "ccc548a07ea7480e765776dcdeb41a41cc039f1318733b7b334dca1a1035dd5c",
-        "analysis_results.csv": "fc36d4a187f17b792d3cb86a5c44f3a9636767fc82bfdaf154cd84f95589891e",
-        "provenance.csv": "2b7cc29e75183082d5fd116ff14794a14c14159bf8a6bc687e3852ae898d8ccd"
+        "features_quarterly.csv": "2b1e0b99359a997af383315f7814a5cdd64f325e46ad188e12acf69776153dc2",
+        "analysis_results.csv": "ebd09d1490b1ac24bc90f77f5324a03a2b129883c1129df3a91bb99b938a9dbe",
+        "provenance.csv": "e5fba9f9a85a90f8b7ea6a374306099ac743d7ba497d0d448cf4bb9dc3244791"
       }
     },
     "pulse": {
-      "generated_at": "2026-11-03T14:43:52+00:00",
+      "generated_at": "2026-11-03T17:06:38+00:00",
       "config_version": "aicor-analysis-v1",
       "feature_set_version": "features-v1",
       "model_version": "pulse-1d2d9370",
       "row_counts": {
         "forecast_results": 4,
         "alert_log": 10,
-        "forecast_backtest": 42
+        "forecast_backtest": 54
       },
       "artifacts": {
-        "forecast_results.csv": "93578a85c46a9c77db3fc52e7236afb43abd491aad82c312a0979ac98e37a7f5",
-        "alert_log.csv": "d0df0569377143f262dd0a2de4b540ae458dfa6f3f67248526a9c81d38f1bf4f",
-        "forecast_backtest.csv": "9a3da055f24b7fb34617ac715af663349435082f2c0825e019672abf773e0ebb",
-        "forecast_coverage.csv": "630e00de236446a1ec9a398610c7aa4d5fa799500f9a4ea2220c62eb9ffb3cd6",
-        "model_registry.json": "9c52c6cc40a1c853eb812302f0228291d83becc4591427375ebe98c215f96555"
+        "forecast_results.csv": "0eafcb632345d539b3ea053d2b7b3858cf255ad8165a0046c7794dfa8cabfa5c",
+        "alert_log.csv": "af09e01ece47157952001e569d245362015c7fe643466acc5832f02e7bd547ef",
+        "forecast_backtest.csv": "ab32a78173587fb103bc15a9a7f41fb0b4f87a13b3b70b58b64f14ed2b1502a3",
+        "forecast_coverage.csv": "415d6338b299ab71e915f12b99b54569e9c9adb89cb2dbe65b638901753eb5b2",
+        "model_registry.json": "804e2c99918bf82a4607a108a6c4279523b4d71a48563c84915f48bcd0a0fdf8"
       },
-      "model_card_hash": "145a7716550437c100340d26254cb5150b055a1a2b9b67da18e00f755656a4b4"
+      "model_card_hash": "167ca3699f05fac4f752b5de6be68c21c9ca295a59ee5b8bc5acb5c9fae17260"
     }
   },
   "manifest": {
     "schema": "aicor-dashboard-manifest/v1",
-    "dataset_version": "14d0e3f94712c0a7d3d73b55f120e3173538a66840543108527ae860693bfc44",
-    "run_id": "20261103T144352Z-9bc981",
-    "path": "runs/20261103T144352Z-9bc981.json",
-    "published_at": "2026-11-03T14:43:52+00:00",
-    "bytes": 154351,
+    "dataset_version": "6366273d195e98c847756bc5ab789658d20a8f67d1099685710c863397cd6bb9",
+    "run_id": "20261103T170638Z-10e1f7",
+    "path": "runs/20261103T170638Z-10e1f7.json",
+    "published_at": "2026-11-03T17:06:38+00:00",
+    "bytes": 161234,
     "config_version": "aicor-analysis-v1",
-    "as_of_quarter": "2026Q2",
+    "as_of_quarter": "2026Q3",
     "freshness": {
-      "generated_at": "2026-11-03T14:43:52+00:00",
-      "latest_data_quarter": "2026Q2",
-      "last_source_sync_at": "2026-10-20T21:13:04.069928+00:00",
+      "generated_at": "2026-11-03T17:06:38+00:00",
+      "latest_data_quarter": "2026Q3",
+      "last_source_sync_at": "2026-11-03T13:34:56.977722+00:00",
       "data_status": "success",
       "sla": "none",
       "note": "Dashboard đọc artifact đã publish; độ mới phụ thuộc lịch chạy pipeline. Không có SLA uptime nào được cam kết."
