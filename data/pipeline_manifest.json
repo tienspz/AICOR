@@ -1,15 +1,15 @@
 {
-  "run_id": "20261103T174321Z-197fdd",
+  "run_id": "20261103T185918Z-9a8c21",
   "status": "success",
   "stages": {
     "load": "ok",
     "compute": "ok",
-    "forecast": "insufficient_evidence",
+    "forecast": "ok",
     "publish": "ok"
   },
   "artifacts": {
     "analysis": {
-      "generated_at": "2026-11-03T17:43:21+00:00",
+      "generated_at": "2026-11-03T18:59:19+00:00",
       "config_version": "aicor-analysis-v1",
       "formula_version": "metrics-v1",
       "feature_set_version": "features-v1",
@@ -19,13 +19,13 @@
         "provenance": 165
       },
       "artifacts": {
-        "features_quarterly.csv": "2b1e0b99359a997af383315f7814a5cdd64f325e46ad188e12acf69776153dc2",
-        "analysis_results.csv": "ebd09d1490b1ac24bc90f77f5324a03a2b129883c1129df3a91bb99b938a9dbe",
+        "features_quarterly.csv": "20da9b27ffcffcd98e8a5fb5da69a3ad74c35c5392e030372a9dcb9929e33d61",
+        "analysis_results.csv": "f4574a71d952a03fd6d5e5e3e4bb98ef02cb1a75ca701d551dff33a8d614b4c4",
         "provenance.csv": "e5fba9f9a85a90f8b7ea6a374306099ac743d7ba497d0d448cf4bb9dc3244791"
       }
     },
     "pulse": {
-      "generated_at": "2026-11-03T17:43:21+00:00",
+      "generated_at": "2026-11-03T18:59:19+00:00",
       "config_version": "aicor-analysis-v1",
       "feature_set_version": "features-v1",
       "model_version": "pulse-1d2d9370",
@@ -35,41 +35,39 @@
         "forecast_backtest": 54
       },
       "artifacts": {
-        "forecast_results.csv": "da585903f334a459d7d24f01fe5bb651f13887bc031f2ab64f2021f944347fca",
-        "alert_log.csv": "d6bd03a4e567ac346b71441afd1f86cbc25d151f2ad53aaa0b29a6f99c03c3ba",
-        "forecast_backtest.csv": "ab32a78173587fb103bc15a9a7f41fb0b4f87a13b3b70b58b64f14ed2b1502a3",
-        "forecast_coverage.csv": "415d6338b299ab71e915f12b99b54569e9c9adb89cb2dbe65b638901753eb5b2",
-        "model_registry.json": "3cf8cde7c0481541614cae132a42a29cf36994bb96adc3a42206f473db10db06"
+        "forecast_results.csv": "a06faf9c9e29db3504420a3b1185ca9f8e6084da50b5a7cdacc9d4935b7762b9",
+        "alert_log.csv": "d5f1f4df4cc63a73a320a850afffbe02d03a09fe7ed852b6e8fc0412ae359bc8",
+        "forecast_backtest.csv": "5b44b79fb1eb3743f5d52dcae16464437b2a6b94510526ea16695f6ccba9e41b",
+        "forecast_coverage.csv": "e21d3c703367dd85d00eb2e7c10717bb36d877bad95e5b9df4d4f604249195fa",
+        "model_registry.json": "7e1f4255298039b4e764e188c54b71c59743433418cd08e0a9da5aa41b1ae137"
       },
-      "model_card_hash": "73c23d3ad9d82e6bb6d22515047aa8c28b7ce6f180b99fb2af7f96c572544e3a"
+      "model_card_hash": "6131590fdb96eadf2d2600c253edcfa8c90f1c9d30d6cc5cbf83cf51d1744d92"
     }
   },
   "manifest": {
     "schema": "aicor-dashboard-manifest/v1",
-    "dataset_version": "1022377f98b5bc96d84bca514e23aca2911c42c7575cdb12b2b8d7de46cbf5dd",
-    "run_id": "20261103T174321Z-197fdd",
-    "path": "runs/20261103T174321Z-197fdd.json",
-    "published_at": "2026-11-03T17:43:21+00:00",
-    "bytes": 161246,
+    "dataset_version": "76a125726cef0e37ef7f2839c845625992a6224c43541508d4ce2cf0c4cebe41",
+    "run_id": "20261103T185918Z-9a8c21",
+    "path": "runs/20261103T185918Z-9a8c21.json",
+    "published_at": "2026-11-03T18:59:19+00:00",
+    "bytes": 160175,
     "config_version": "aicor-analysis-v1",
     "as_of_quarter": "2026Q3",
     "freshness": {
-      "generated_at": "2026-11-03T17:43:21+00:00",
+      "generated_at": "2026-11-03T18:59:19+00:00",
       "latest_data_quarter": "2026Q3",
-      "last_source_sync_at": "2026-11-03T13:34:56.977722+00:00",
+      "last_source_sync_at": "2026-11-03T18:59:18.587371+00:00",
       "data_status": "success",
       "sla": "none",
       "note": "Dashboard đọc artifact đã publish; độ mới phụ thuộc lịch chạy pipeline. Không có SLA uptime nào được cam kết."
     }
   },
-  "warnings": [
-    "pulse is experimental (gate not passed): quality_gate_not_passed"
-  ],
+  "warnings": [],
   "pulse": {
-    "status": "insufficient_evidence",
-    "reason": "quality_gate_not_passed",
+    "status": "ok",
+    "reason": "",
     "model_version": "pulse-1d2d9370",
-    "quality_gate_passed": false
+    "quality_gate_passed": true
   },
   "health_path": "quality/health.json"
 }

@@ -1,6 +1,6 @@
 # Model card — aicor-pulse (pulse-1d2d9370)
 
-- **Run:** `20261103T174321Z-197fdd`
+- **Run:** `20261103T185918Z-9a8c21`
 - **As of:** 2026-10-29
 - **Config version:** `aicor-analysis-v1`
 - **Feature set:** `features-v1`
@@ -41,31 +41,31 @@ Mọi feature chỉ dùng dữ liệu có available_at <= as_of_date; giá trị
 ## Backtest (h=0, pooled)
 | Model | n | MAE | RMSE | Directional accuracy |
 | --- | --- | --- | --- | --- |
-| naive | 10 | 0.7238 | 0.9096 | 0.0 |
-| ar1 | 10 | 0.6922 | 0.9546 | 0.7 |
-| ridge | 10 | 0.9463 | 1.2822 | 0.7 |
+| naive | 10 | 0.7228 | 0.9081 | 0.0 |
+| ar1 | 10 | 0.6886 | 0.9509 | 0.7 |
+| ridge | 10 | 0.6734 | 0.8931 | 0.7 |
 
 ## Quality gate (FCST-08)
-**Passed:** False — primary_model_does_not_beat_naive
+**Passed:** True — ok
 
 ```json
 [
   {
     "horizon": 0,
-    "status": "fail",
-    "model_mae": 0.946289,
-    "naive_mae": 0.72378,
-    "model_rmse": 1.282174,
-    "naive_rmse": 0.909624,
+    "status": "pass",
+    "model_mae": 0.673363,
+    "naive_mae": 0.722783,
+    "model_rmse": 0.893127,
+    "naive_rmse": 0.908068,
     "n": 10
   },
   {
     "horizon": 1,
     "status": "pass",
-    "model_mae": 0.853602,
-    "naive_mae": 0.978228,
-    "model_rmse": 1.101617,
-    "naive_rmse": 1.198644,
+    "model_mae": 0.853906,
+    "naive_mae": 0.975146,
+    "model_rmse": 1.10047,
+    "naive_rmse": 1.195154,
     "n": 8
   }
 ]
