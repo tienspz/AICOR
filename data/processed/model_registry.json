@@ -28,7 +28,7 @@
   ],
   "random_state": 42,
   "n_samples": 26,
-  "run_id": "20261104T001457Z-5f0e59",
+  "run_id": "20261104T010937Z-e65b74",
   "as_of_date": "2026-10-29",
   "as_of_policy": "Mọi feature chỉ dùng dữ liệu có available_at <= as_of_date; giá trị target chỉ dùng để huấn luyện/đánh giá.",
   "training_window": {
@@ -57,43 +57,43 @@
   "backtest_metrics_h0_pooled": {
     "naive": {
       "n": 10.0,
-      "mae": 0.7227832012755716,
-      "rmse": 0.9080676912233824,
+      "mae": 0.7118147176182918,
+      "rmse": 0.8909137237942719,
       "directional_accuracy": 0.0
     },
     "ar1": {
       "n": 10.0,
-      "mae": 0.6886442719789421,
-      "rmse": 0.9508894614970913,
+      "mae": 0.678763697666958,
+      "rmse": 0.9371645217847402,
       "directional_accuracy": 0.7
     },
     "ridge": {
       "n": 10.0,
-      "mae": 0.6733633129342723,
-      "rmse": 0.8931274191598787,
+      "mae": 0.9323559656286269,
+      "rmse": 1.27649192454325,
       "directional_accuracy": 0.7
     }
   },
   "quality_gate": {
-    "passed": true,
-    "reason": "",
+    "passed": false,
+    "reason": "primary_model_does_not_beat_naive",
     "checks": [
       {
         "horizon": 0,
-        "status": "pass",
-        "model_mae": 0.673363,
-        "naive_mae": 0.722783,
-        "model_rmse": 0.893127,
-        "naive_rmse": 0.908068,
+        "status": "fail",
+        "model_mae": 0.932356,
+        "naive_mae": 0.711815,
+        "model_rmse": 1.276492,
+        "naive_rmse": 0.890914,
         "n": 10
       },
       {
         "horizon": 1,
         "status": "pass",
-        "model_mae": 0.853906,
-        "naive_mae": 0.975146,
-        "model_rmse": 1.10047,
-        "naive_rmse": 1.195154,
+        "model_mae": 0.831481,
+        "naive_mae": 0.962094,
+        "model_rmse": 1.086089,
+        "naive_rmse": 1.188546,
         "n": 8
       }
     ],
