@@ -1,16 +1,16 @@
 {
   "schema": "aicor-dashboard-manifest/v1",
-  "dataset_version": "262748fa5efa892b3a61ef1897b88227213a4ca47523610ab5cb414697c24eb4",
-  "run_id": "20261103T225151Z-606f2f",
-  "path": "runs/20261103T225151Z-606f2f.json",
-  "published_at": "2026-11-03T22:51:52+00:00",
-  "bytes": 160164,
+  "dataset_version": "6706d84fa02778bb92272877bb6f6e228e3774112aa4beb5ca8123ae28f28b6d",
+  "run_id": "20261104T001457Z-5f0e59",
+  "path": "runs/20261104T001457Z-5f0e59.json",
+  "published_at": "2026-11-04T00:14:58+00:00",
+  "bytes": 160170,
   "config_version": "aicor-analysis-v1",
   "as_of_quarter": "2026Q3",
   "freshness": {
-    "generated_at": "2026-11-03T22:51:52+00:00",
+    "generated_at": "2026-11-04T00:14:58+00:00",
     "latest_data_quarter": "2026Q3",
-    "last_source_sync_at": "2026-11-03T22:51:51.743943+00:00",
+    "last_source_sync_at": "2026-11-04T00:14:57.995338+00:00",
     "data_status": "success",
     "sla": "none",
     "note": "Dashboard đọc artifact đã publish; độ mới phụ thuộc lịch chạy pipeline. Không có SLA uptime nào được cam kết."
