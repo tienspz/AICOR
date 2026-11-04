@@ -1,5 +1,5 @@
 {
-  "run_id": "20261104T134409Z-ee97a6",
+  "run_id": "20261104T191810Z-ee93a4",
   "status": "success",
   "stages": {
     "load": "ok",
@@ -9,7 +9,7 @@
   },
   "artifacts": {
     "analysis": {
-      "generated_at": "2026-11-04T13:44:10+00:00",
+      "generated_at": "2026-11-04T19:18:10+00:00",
       "config_version": "aicor-analysis-v1",
       "formula_version": "metrics-v1",
       "feature_set_version": "features-v1",
@@ -19,13 +19,13 @@
         "provenance": 165
       },
       "artifacts": {
-        "features_quarterly.csv": "d37404e73cc85c576e92a004a3a34cc8d8b15c40b3e48507262e686853ee65d2",
-        "analysis_results.csv": "6e6c5636aa0f4e7a141e80fd3ca25e1bdf191bb93feb937f148a2c7b305d93a2",
+        "features_quarterly.csv": "0dca35877d603ad5d84f366e008a8a80f7071d571293f09c6ffbd91a8af6060f",
+        "analysis_results.csv": "8a9ec6f4536a08be0d8491c6aebc857d9871aef47728a4b53a94c05811784f3a",
         "provenance.csv": "e5fba9f9a85a90f8b7ea6a374306099ac743d7ba497d0d448cf4bb9dc3244791"
       }
     },
     "pulse": {
-      "generated_at": "2026-11-04T13:44:10+00:00",
+      "generated_at": "2026-11-04T19:18:11+00:00",
       "config_version": "aicor-analysis-v1",
       "feature_set_version": "features-v1",
       "model_version": "pulse-1d2d9370",
@@ -35,28 +35,28 @@
         "forecast_backtest": 54
       },
       "artifacts": {
-        "forecast_results.csv": "7f86c9d2dd043b50dc0b838b0818c581b80f358ee54deb955b7a34921f952acd",
-        "alert_log.csv": "5460fe72492b73a173a9aa1af5688b1df9c55428c50f49e50a9aab44a31778cd",
-        "forecast_backtest.csv": "194d7ec8ed63d22189a3d6fcc45f335be2d52d3ea066deaee491968d27bafa22",
-        "forecast_coverage.csv": "1b9e30502cf26323945ac94127eec721fc3a938a6a6a70c089d977cf31cb5d69",
-        "model_registry.json": "42c084cc928f2ccdf2bb682bf3fb06b33dff56bab0f4c264d2381aa3257d0589"
+        "forecast_results.csv": "2bc54f3812fbefaf35e03e8c72c2d6b67ee9c9fac81c9caa4cb0825b96ace4a4",
+        "alert_log.csv": "8343eefefe5d8d84f3357b90f7729521c7d7bffad4dccfb0752face3fe093213",
+        "forecast_backtest.csv": "e0490736f2ce3a692ed7dde4e2897f370154d66a52bf861146d90858ebdd3575",
+        "forecast_coverage.csv": "415d6338b299ab71e915f12b99b54569e9c9adb89cb2dbe65b638901753eb5b2",
+        "model_registry.json": "26a90ecc5f8431524a983b58c40d411eaf721fe04d8f12f6aea7f760b3dbca70"
       },
-      "model_card_hash": "e04c424715dc6811feb51514f8a995ead31d3780bee8ba053ae865a841f52f5f"
+      "model_card_hash": "217c1813b1acf3c4c1d3e3a191ca528a6a2958c7047289f8a0a139e4fbb5ecc9"
     }
   },
   "manifest": {
     "schema": "aicor-dashboard-manifest/v1",
-    "dataset_version": "b9f06b9825f1d4c4c99a12fc8f114787d3134900053f43046f8cf7aa6f24c430",
-    "run_id": "20261104T134409Z-ee97a6",
-    "path": "runs/20261104T134409Z-ee97a6.json",
-    "published_at": "2026-11-04T13:44:10+00:00",
-    "bytes": 161290,
+    "dataset_version": "01879ae087af02ad2eb8f59d1268ad26a2cdbfc3553b60c2702e62b8fa17fd68",
+    "run_id": "20261104T191810Z-ee93a4",
+    "path": "runs/20261104T191810Z-ee93a4.json",
+    "published_at": "2026-11-04T19:18:11+00:00",
+    "bytes": 161303,
     "config_version": "aicor-analysis-v1",
     "as_of_quarter": "2026Q3",
     "freshness": {
-      "generated_at": "2026-11-04T13:44:10+00:00",
+      "generated_at": "2026-11-04T19:18:11+00:00",
       "latest_data_quarter": "2026Q3",
-      "last_source_sync_at": "2026-11-04T13:44:09.884235+00:00",
+      "last_source_sync_at": "2026-11-04T19:18:10.614842+00:00",
       "data_status": "success",
       "sla": "none",
       "note": "Dashboard đọc artifact đã publish; độ mới phụ thuộc lịch chạy pipeline. Không có SLA uptime nào được cam kết."
