@@ -28,7 +28,7 @@
   ],
   "random_state": 42,
   "n_samples": 26,
-  "run_id": "20261104T044340Z-9e898f",
+  "run_id": "20261104T084026Z-5c35bb",
   "as_of_date": "2026-10-29",
   "as_of_policy": "Mọi feature chỉ dùng dữ liệu có available_at <= as_of_date; giá trị target chỉ dùng để huấn luyện/đánh giá.",
   "training_window": {
