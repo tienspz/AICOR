@@ -28,7 +28,7 @@
   ],
   "random_state": 42,
   "n_samples": 26,
-  "run_id": "20261104T084026Z-5c35bb",
+  "run_id": "20261104T134409Z-ee97a6",
   "as_of_date": "2026-10-29",
   "as_of_policy": "Mọi feature chỉ dùng dữ liệu có available_at <= as_of_date; giá trị target chỉ dùng để huấn luyện/đánh giá.",
   "training_window": {
@@ -64,13 +64,13 @@
     "ar1": {
       "n": 10.0,
       "mae": 0.6801695063216469,
-      "rmse": 0.9405456841947307,
+      "rmse": 0.9405456841947308,
       "directional_accuracy": 0.7
     },
     "ridge": {
       "n": 10.0,
-      "mae": 0.9333674426084274,
-      "rmse": 1.2787733100306544,
+      "mae": 0.9333674426084239,
+      "rmse": 1.2787733100306566,
       "directional_accuracy": 0.7
     }
   },
