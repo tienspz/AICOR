@@ -1,5 +1,5 @@
 {
-  "run_id": "20261104T044122Z-7f3f4f",
+  "run_id": "20261104T044340Z-9e898f",
   "status": "success",
   "stages": {
     "load": "ok",
@@ -9,7 +9,7 @@
   },
   "artifacts": {
     "analysis": {
-      "generated_at": "2026-11-04T04:41:23+00:00",
+      "generated_at": "2026-11-04T04:43:41+00:00",
       "config_version": "aicor-analysis-v1",
       "formula_version": "metrics-v1",
       "feature_set_version": "features-v1",
@@ -25,7 +25,7 @@
       }
     },
     "pulse": {
-      "generated_at": "2026-11-04T04:41:23+00:00",
+      "generated_at": "2026-11-04T04:43:41+00:00",
       "config_version": "aicor-analysis-v1",
       "feature_set_version": "features-v1",
       "model_version": "pulse-1d2d9370",
@@ -35,28 +35,28 @@
         "forecast_backtest": 54
       },
       "artifacts": {
-        "forecast_results.csv": "15239eacd51740ca5d95095d58d1314eead5ba9b3f80ab4d60deed955f7e501e",
-        "alert_log.csv": "e35fe0e4d61b88bae9e8b027843f75913cd81d661450e73910a48318d7cc1eab",
-        "forecast_backtest.csv": "194d7ec8ed63d22189a3d6fcc45f335be2d52d3ea066deaee491968d27bafa22",
+        "forecast_results.csv": "cef39212f908d1703f0e258c8a4a62e44c9a545c49d063e87bdf5f0a9b82414b",
+        "alert_log.csv": "dc79b4e566022acb36331eb45ad62ca2236b4d5877ab350c4e012acc8d5265c3",
+        "forecast_backtest.csv": "34851cd4bfe606db021781590507f4e34700a6d1aa243173b3e91be4103fdeec",
         "forecast_coverage.csv": "1b9e30502cf26323945ac94127eec721fc3a938a6a6a70c089d977cf31cb5d69",
-        "model_registry.json": "073942e4168ff79f5b786fbc158b968ca546939a28a5c8a511fc9bfc67699c8f"
+        "model_registry.json": "1d6ca6ecf0dca6db51b62a9925fe69562b1ea64539975d2033866510b33d91ce"
       },
-      "model_card_hash": "a6dc5f299d967afab94fed6c602469c57ab8022d1cd6c72a33cb43f636a3dbc2"
+      "model_card_hash": "e835e46eceae8a6d7f5076f50387fd0e6751b7da574bfd2d9f5e4c17ffde100b"
     }
   },
   "manifest": {
     "schema": "aicor-dashboard-manifest/v1",
-    "dataset_version": "0e2398d94d3de7cb6f2eb13d55a0a9893c2b6e7a1ad5abc9bdef9ebb588b05ae",
-    "run_id": "20261104T044122Z-7f3f4f",
-    "path": "runs/20261104T044122Z-7f3f4f.json",
-    "published_at": "2026-11-04T04:41:23+00:00",
-    "bytes": 161289,
+    "dataset_version": "c757f9ce81b85aa7aa76e3ec884b6c700d8d8bbee02801ded339d626ea977541",
+    "run_id": "20261104T044340Z-9e898f",
+    "path": "runs/20261104T044340Z-9e898f.json",
+    "published_at": "2026-11-04T04:43:41+00:00",
+    "bytes": 161290,
     "config_version": "aicor-analysis-v1",
     "as_of_quarter": "2026Q3",
     "freshness": {
-      "generated_at": "2026-11-04T04:41:23+00:00",
+      "generated_at": "2026-11-04T04:43:41+00:00",
       "latest_data_quarter": "2026Q3",
-      "last_source_sync_at": "2026-11-04T04:41:22.971704+00:00",
+      "last_source_sync_at": "2026-11-04T04:43:40.228515+00:00",
       "data_status": "success",
       "sla": "none",
       "note": "Dashboard đọc artifact đã publish; độ mới phụ thuộc lịch chạy pipeline. Không có SLA uptime nào được cam kết."
