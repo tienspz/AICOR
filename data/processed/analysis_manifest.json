@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-04T20:07:35+00:00",
+  "generated_at": "2026-11-04T21:12:11+00:00",
   "config_version": "aicor-analysis-v1",
   "formula_version": "metrics-v1",
   "feature_set_version": "features-v1",
@@ -9,8 +9,8 @@
     "provenance": 165
   },
   "artifacts": {
-    "features_quarterly.csv": "0dca35877d603ad5d84f366e008a8a80f7071d571293f09c6ffbd91a8af6060f",
-    "analysis_results.csv": "8a9ec6f4536a08be0d8491c6aebc857d9871aef47728a4b53a94c05811784f3a",
+    "features_quarterly.csv": "e8e5bd714436bf8d1257e1fc6d2113e23090be7979a739d52d6036a4b92f0dd1",
+    "analysis_results.csv": "45e839f05666eaf08d1c6acfbe6da79f8462adf7b7523e0d1cb72225cac2f6f4",
     "provenance.csv": "e5fba9f9a85a90f8b7ea6a374306099ac743d7ba497d0d448cf4bb9dc3244791"
   }
 }
