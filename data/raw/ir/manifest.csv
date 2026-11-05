@@ -199,3 +199,11 @@ ir_googl.csv,,https://blog.google/rss/,2026-11-04T21:12:01.295670+00:00
 ir_googl.csv,,https://cloud.google.com/blog/rss/,2026-11-04T21:12:03.458331+00:00
 ir_googl.csv,,https://research.google/blog/rss/,2026-11-04T21:12:07.847937+00:00
 ir_googl.csv,c1026f0d71db8317f05c9a6f246ea2e4447fc58d0f65b50f0efbc249323c1d93,ir:GOOGL,2026-11-04T21:12:10.252571+00:00
+ir_msft.csv,,https://blogs.microsoft.com/feed/,2026-11-05T08:59:44.454121+00:00
+ir_msft.csv,,https://azure.microsoft.com/en-us/blog/feed/,2026-11-05T08:59:46.663733+00:00
+ir_msft.csv,,https://www.microsoft.com/en-us/research/feed/,2026-11-05T08:59:56.780031+00:00
+ir_msft.csv,689c119756345a87edbde9385c358a43ccf66998b6662887295e9c216252efe8,ir:MSFT,2026-11-05T09:00:02.227609+00:00
+ir_googl.csv,,https://blog.google/rss/,2026-11-05T09:00:02.229988+00:00
+ir_googl.csv,,https://cloud.google.com/blog/rss/,2026-11-05T09:00:04.429859+00:00
+ir_googl.csv,,https://research.google/blog/rss/,2026-11-05T09:00:08.913325+00:00
+ir_googl.csv,c1026f0d71db8317f05c9a6f246ea2e4447fc58d0f65b50f0efbc249323c1d93,ir:GOOGL,2026-11-05T09:00:11.084192+00:00
