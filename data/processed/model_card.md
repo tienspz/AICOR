@@ -1,6 +1,6 @@
 # Model card — aicor-pulse (pulse-1d2d9370)
 
-- **Run:** `20261105T103826Z-149f15`
+- **Run:** `20261105T135641Z-aab9c9`
 - **As of:** 2026-10-29
 - **Config version:** `aicor-analysis-v1`
 - **Feature set:** `features-v1`
