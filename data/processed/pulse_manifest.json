@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-07T12:24:44+00:00",
+  "generated_at": "2026-11-07T17:22:32+00:00",
   "config_version": "aicor-analysis-v1",
   "feature_set_version": "features-v1",
   "model_version": "pulse-1d2d9370",
@@ -9,11 +9,11 @@
     "forecast_backtest": 54
   },
   "artifacts": {
-    "forecast_results.csv": "cae6f7db6368dd8e4ab66510f70f4bb8c635195df732ea5d93cf7472fd452419",
-    "alert_log.csv": "242bdcc0122065baf36fdc4d1183322b55222b618b583a5015f225296fe0983a",
-    "forecast_backtest.csv": "c5eb3ddb49064e6aaee0debdfe8908366d15fded23e5c50366fdd2a2adeb716f",
-    "forecast_coverage.csv": "cb0944ad64b0c318fcd75c793a6b0e2ada0a67dcdbb573438387d426b87bfab3",
-    "model_registry.json": "ed6e5cc4869232ac8d8b86f0f9204271c579762c55a66bc415b44f83dc99952e"
+    "forecast_results.csv": "3878bc320631f4399358bc32ff51038985188eaacef84ed1ffd15c645c613332",
+    "alert_log.csv": "875cd79414d18d8a4781f4e610a89b2d5390b74a42074aadda4a1c0ca09723c3",
+    "forecast_backtest.csv": "67e14cef66dac277c8a9cd2a2fd3dcae3cf2564b29bf81350156afc8f19025f2",
+    "forecast_coverage.csv": "d2dd77282bdd124d3b07a51754de209324827a866b514a89bb3fa1ee7d07cacc",
+    "model_registry.json": "7c70b96755c9d5aed9c7570be639f8fba026160264631c4c3727900bb4ba29d8"
   },
-  "model_card_hash": "9b8c094dd9d3cf2415460f1fe1c6bb6b0e6f448f83839d68fa69422e06d6dc42"
+  "model_card_hash": "fc3310ecd19158a75b630bcec8681219e865efba582f1678b7c54ea9212aa7fe"
 }
