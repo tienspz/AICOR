@@ -1,6 +1,6 @@
 # Model card — aicor-pulse (pulse-1d2d9370)
 
-- **Run:** `20261107T082250Z-28df45`
+- **Run:** `20261107T095054Z-1d4847`
 - **As of:** 2026-10-29
 - **Config version:** `aicor-analysis-v1`
 - **Feature set:** `features-v1`
@@ -43,7 +43,7 @@ Mọi feature chỉ dùng dữ liệu có available_at <= as_of_date; giá trị
 | --- | --- | --- | --- | --- |
 | naive | 10 | 0.7110 | 0.9282 | 0.0 |
 | ar1 | 10 | 0.6954 | 0.9804 | 0.7 |
-| ridge | 10 | 0.9475 | 1.3039 | 0.7 |
+| ridge | 10 | 0.9478 | 1.3040 | 0.7 |
 
 ## Quality gate (FCST-08)
 **Passed:** False — primary_model_does_not_beat_naive
@@ -53,19 +53,19 @@ Mọi feature chỉ dùng dữ liệu có available_at <= as_of_date; giá trị
   {
     "horizon": 0,
     "status": "fail",
-    "model_mae": 0.947512,
-    "naive_mae": 0.71102,
-    "model_rmse": 1.303908,
-    "naive_rmse": 0.928205,
+    "model_mae": 0.947763,
+    "naive_mae": 0.711027,
+    "model_rmse": 1.304009,
+    "naive_rmse": 0.928243,
     "n": 10
   },
   {
     "horizon": 1,
     "status": "pass",
-    "model_mae": 0.827249,
-    "naive_mae": 0.988388,
-    "model_rmse": 1.113346,
-    "naive_rmse": 1.226283,
+    "model_mae": 0.82744,
+    "naive_mae": 0.988455,
+    "model_rmse": 1.113417,
+    "naive_rmse": 1.226265,
     "n": 8
   }
 ]
