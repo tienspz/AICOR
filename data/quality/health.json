@@ -1,6 +1,6 @@
 {
-  "run_id": "20261106T235134Z-3e084b",
-  "generated_at": "2026-11-06T23:51:35+00:00",
+  "run_id": "20261107T004817Z-5f86fa",
+  "generated_at": "2026-11-07T00:48:17+00:00",
   "status": "success",
   "stages": {
     "load": "ok",
@@ -8,16 +8,16 @@
     "forecast": "insufficient_evidence",
     "publish": "ok"
   },
-  "duration_seconds": 0.753,
+  "duration_seconds": 0.259,
   "latest_data_quarter": "2026Q3",
   "data_status": "success",
   "warnings": [
     "pulse is experimental (gate not passed): quality_gate_not_passed"
   ],
   "freshness": {
-    "generated_at": "2026-11-06T23:51:35+00:00",
+    "generated_at": "2026-11-07T00:48:17+00:00",
     "latest_data_quarter": "2026Q3",
-    "last_source_sync_at": "2026-11-06T23:51:34.506456+00:00",
+    "last_source_sync_at": "2026-11-07T00:48:17.621552+00:00",
     "data_status": "success",
     "sla": "none",
     "note": "Dashboard đọc artifact đã publish; độ mới phụ thuộc lịch chạy pipeline. Không có SLA uptime nào được cam kết."
